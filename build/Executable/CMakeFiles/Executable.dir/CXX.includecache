@@ -1,0 +1,36 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+/home/nefisik/WORK/Web-Server/Executable/main.cpp
+../Server/server-run/include/server.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/server.h
+
+/home/nefisik/WORK/Web-Server/Server/server-run/include/server.h
+Poco/Net/HTTPServer.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTTPServer.h
+Poco/Net/HTTPRequestHandler.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTTPRequestHandler.h
+Poco/Net/HTTPRequestHandlerFactory.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTTPRequestHandlerFactory.h
+Poco/Net/HTTPServerRequest.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTTPServerRequest.h
+Poco/Net/HTTPServerResponse.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTTPServerResponse.h
+Poco/Net/ServerSocket.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/ServerSocket.h
+Poco/Util/ServerApplication.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Util/ServerApplication.h
+iostream
+-
+Poco/Net/HTTPClientSession.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTTPClientSession.h
+Poco/URI.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/URI.h
+Poco/Net/HTMLForm.h
+/home/nefisik/WORK/Web-Server/Server/server-run/include/Poco/Net/HTMLForm.h
+
