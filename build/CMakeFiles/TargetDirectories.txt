@@ -1,0 +1,8 @@
+/home/nefisik/WORK/Web-Server/build/CMakeFiles/rebuild_cache.dir
+/home/nefisik/WORK/Web-Server/build/CMakeFiles/edit_cache.dir
+/home/nefisik/WORK/Web-Server/build/Server/CMakeFiles/rebuild_cache.dir
+/home/nefisik/WORK/Web-Server/build/Server/CMakeFiles/edit_cache.dir
+/home/nefisik/WORK/Web-Server/build/Server/CMakeFiles/Server.dir
+/home/nefisik/WORK/Web-Server/build/Executable/CMakeFiles/edit_cache.dir
+/home/nefisik/WORK/Web-Server/build/Executable/CMakeFiles/rebuild_cache.dir
+/home/nefisik/WORK/Web-Server/build/Executable/CMakeFiles/Executable.dir

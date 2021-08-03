@@ -1,0 +1,40 @@
+cmake_minimum_required(VERSION 3.5)
+
+project(Server C CXX)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+find_package(Poco COMPONENTS Net Util Data REQUIRED)
+find_package(PostgreSQL REQUIRED)
+
+file(GLOB HEADERS_Server
+		factory/include/*.h
+		handlers/include/*.h
+		postgres/include/*.h
+		server-run/include/*.h
+	)
+
+file(GLOB SOURCE_Server
+		factory/source/*.cpp
+		handlers/source/*.cpp
+		postgres/source/*.cpp
+		server-run/source/*.cpp
+	)
+
+add_library(${PROJECT_NAME} SHARED ${HEADERS_Server} ${SOURCE_Server})
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC ${Poco_DEFINITIONS})
+
+target_link_directories(${PROJECT_NAME} PUBLIC ${Poco_INCLUDE_DIRS} ${PostgreSQL_INCLUDE_DIRS})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${Poco_INCLUDE_DIRS} ${PostgreSQL_INCLUDE_DIRS})
+
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Poco_LIBRARIES} ${PostgreSQL_LIBRARIES})
+
+set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+
+set(${PROJECT_NAME}_DEFINITIONS
+		CACHE INTERNAL "${PROJECT_NAME}: Definitions" FORCE)
+
+set(${PROJECT_NAME}_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include
+		CACHE INTERNAL "${PROJECT_NAME}: Definitions" FORCE)
