@@ -1,17 +1,25 @@
-#include "server-run/include/server.h"
-#include "../include/factory.h"
-#include "handlers/include/handlers.h"
+#include "factory/include/factory.h"
+#include "handlers/include/LogInRequestHandler.h"
+#include "handlers/include/LogOutRequestHandler.h"
+#include "Poco/URI.h"
 
 HTTPRequestHandler *HelloRequestHandlerFactory::createRequestHandler(const HTTPServerRequest &request)
 {
 	Poco::URI uri(request.getURI());
-	if (uri.getPath() == "/hello/")
+	try
 	{
-		return new HelloRequestHandler();
+		if (uri.getPath() == "/auth/login/")
+		{
+			return new LogInRequestHandler();
+		}
+		if (uri.getPath() == "/auth/logout/")
+		{
+			return new LogOutRequestHandler();
+		}
 	}
-	if (uri.getPath() == "/html/")
+	catch (std::exception &ex)
 	{
-		return new HTMLRequestHandler;
+		ex.what();
 	}
-	else return nullptr;
+	return nullptr;
 }

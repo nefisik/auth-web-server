@@ -1,4 +1,5 @@
-#include "include/db.h"
+#include "database/postgres/include/db.h"
+#include "database/postgres/include/configspostgres.h"
 
 void registration(Session& session, User& user) {
 	try{
@@ -22,6 +23,7 @@ void registration(Session& session, User& user) {
 }
 
 void authentication(Session& session, User& user) {
+	std::string pswd;
 	try
 	{
 		Statement select(session);
@@ -49,15 +51,7 @@ int main()
 {
 	Poco::Data::PostgreSQL::Connector::registerConnector();
 
-	std::string host = "localhost";
-	std::string port = "5432";
-	std::string db = "auth";
-	std::string user = "postgres";
-	std::string password = "user";
-
-	std::string connectionString = "host=" + host + " user=" + user + " password" + password + " dbname=" + db;
-
-	Session session("PostgreSQL", connectionString);
+	Session session("PostgreSQL", PgConfig::connectionString);
 
 	User usr;
 	usr.username = "Maria";

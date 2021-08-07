@@ -1,6 +1,6 @@
 #pragma once
 
-#include "dbstructure.h"
+#include "database/user.h"
 #include "Poco/Data/Session.h"
 #include "Poco/Data/PostgreSQL/Connector.h"
 #include "Poco/Data/PostgreSQL/PostgreSQLException.h"
