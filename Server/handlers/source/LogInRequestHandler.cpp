@@ -9,16 +9,16 @@ void LogInRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerRe
 
 	User user;
 
-	if(request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
+	if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
 	{
 		boost::property_tree::ptree pt;
 		boost::property_tree::read_json(request.stream(), pt);
 		boost::property_tree::ptree::const_iterator it = pt.begin();
-		if(it->first == "username")
+		if (it->first == "username")
 		{
 			user.username = it->second.get_value<std::string>();
 		}
-		if(it->first == "password")
+		if (it->first == "password")
 		{
 			user.password = it->second.get_value<std::string>();
 		}
@@ -27,28 +27,27 @@ void LogInRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerRe
 			MongoConnect conn;
 			// conn.addNewUser(user);
 			int authNumberUsers = conn.authentication(user);
-			if(authNumberUsers == 1)
+			if (authNumberUsers == 1)
 			{
 				user.passwordValid = 1;
 				user.token = "ifcmifw7439f43f"; //generate token
 				conn.updateUserToken(user);
 			}
-			else if(authNumberUsers > 1)
+			else if (authNumberUsers > 1)
 			{
-				std::cerr << "There is more than one user named " + user.username + "in the database" <<std::endl;
+				std::cerr << "There is more than one user named " + user.username + "in the database" << std::endl;
 				return;
 			}
 			else
 			{
-				std::cerr << "Unregistred user" <<std::endl;
+				std::cerr << "Unregistred user" << std::endl;
 				return;
 			}
 		}
-		catch(const Poco::Exception& exc)
+		catch (const Poco::Exception &exc)
 		{
 			std::cerr << exc.displayText() << std::endl;
 		}
-		
 	}
 
 	// return response.setStatus(Poco::Net::HTTPServerResponse::HTTP_OK);

@@ -2,4 +2,6 @@ CMakeLists.txt.user
 
 build/
 
+Server/database/postgres/
+
 .vscode

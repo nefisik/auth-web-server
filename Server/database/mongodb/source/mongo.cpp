@@ -3,7 +3,7 @@
 #include "database/mongodb/include/mongodata.h"
 
 // INSERT INTO users(username, hashPassword) VALUES(..., ...)
-void MongoConnect::addNewUser(const User& user)
+void MongoConnect::addNewUser(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -30,7 +30,7 @@ void MongoConnect::addNewUser(const User& user)
 }
 
 // SELECT username WHERE username = "..."
-int MongoConnect::authentication(const User& user)
+int MongoConnect::authentication(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -41,7 +41,7 @@ int MongoConnect::authentication(const User& user)
 	// Selecting fields is done by adding them to the returnFieldSelector
 	// Use 1 as value of the element.
 	cursor.query().selector().add(MongoData::username, user.username);
-	Poco::MongoDB::ResponseMessage& response = cursor.next(connection);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
 	for (;;)
 	{
 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
@@ -61,7 +61,7 @@ int MongoConnect::authentication(const User& user)
 }
 
 // SELECT hashPassword WHERE username = "..."
-std::string MongoConnect::getUserHashPassword(const User& user)
+std::string MongoConnect::getUserHashPassword(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -71,7 +71,7 @@ std::string MongoConnect::getUserHashPassword(const User& user)
 	// Selecting fields is done by adding them to the returnFieldSelector
 	// Use 1 as value of the element.
 	cursor.query().selector().add(MongoData::username, user.username);
-	Poco::MongoDB::ResponseMessage& response = cursor.next(connection);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
 	for (;;)
 	{
 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
@@ -90,7 +90,7 @@ std::string MongoConnect::getUserHashPassword(const User& user)
 }
 
 // SELECT hashPassword WHERE username = "..."
-std::string MongoConnect::getUserToken(const User& user)
+std::string MongoConnect::getUserToken(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -100,7 +100,7 @@ std::string MongoConnect::getUserToken(const User& user)
 	// Selecting fields is done by adding them to the returnFieldSelector
 	// Use 1 as value of the element.
 	cursor.query().selector().add(MongoData::username, user.username);
-	Poco::MongoDB::ResponseMessage& response = cursor.next(connection);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
 	for (;;)
 	{
 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
@@ -119,7 +119,7 @@ std::string MongoConnect::getUserToken(const User& user)
 }
 
 // UPDATE UserDb SET hashPassword = "..." WHERE username = "..."
-void MongoConnect::updateUserHashPassword(const User& user)
+void MongoConnect::updateUserHashPassword(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -144,7 +144,7 @@ void MongoConnect::updateUserHashPassword(const User& user)
 }
 
 // UPDATE UserDb SET token = "..." WHERE username = "..."
-void MongoConnect::updateUserToken(const User& user)
+void MongoConnect::updateUserToken(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -168,9 +168,8 @@ void MongoConnect::updateUserToken(const User& user)
 	}
 }
 
-
 // DELETE FROM UsersDb WHERE username = "..."
-void MongoConnect::deleteUser(const User& user)
+void MongoConnect::deleteUser(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 

@@ -2,7 +2,8 @@
 
 #include <string>
 
-struct User{
+struct User
+{
 	int id;
 	std::string username;
 	std::string password;
