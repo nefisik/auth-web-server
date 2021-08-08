@@ -128,6 +128,8 @@ void MongoConnect::updateUserHashPassword(const User &user)
 	Poco::MongoDB::Database db(MongoData::DbName);
 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoData::CollectionName);
 	request->selector().add(MongoData::username, user.username);
+	request->update().add(MongoData::username, user.username);
+	request->update().add(MongoData::token, user.token);
 	request->update().add(MongoData::hashPassword, user.password);
 	request->update().add(MongoData::token, user.token);
 	connection.sendRequest(*request);
@@ -153,12 +155,13 @@ void MongoConnect::updateUserToken(const User &user)
 	Poco::MongoDB::Database db(MongoData::DbName);
 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoData::CollectionName);
 	request->selector().add(MongoData::username, user.username);
+	request->update().add(MongoData::username, user.username);
 	request->update().add(MongoData::hashPassword, user.password);
 	request->update().add(MongoData::token, user.token);
 	connection.sendRequest(*request);
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
 	// std::cout << "LastError: " << lastError->toString(2) << std::endl;
-	if (!lastError.isNull())
+	if (lastError.isNull())
 	{
 		std::cout << "Last Error: " << lastError->toString(2) << std::endl;
 	}

@@ -8,6 +8,9 @@ void LogInRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerRe
 	app.logger().information("Request from %s", request.clientAddress().toString());
 
 	User user;
+	user.username = "kalikov";
+	user.password = "adsofwq838hn28r9nheo";
+	user.token = "cjsa783qhfb387fhnfq3898ufjiofq3"; //generate token
 
 	if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
 	{
@@ -30,7 +33,7 @@ void LogInRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerRe
 			if (authNumberUsers == 1)
 			{
 				user.passwordValid = 1;
-				user.token = "ifcmifw7439f43f"; //generate token
+				user.token = "aifcmifw7439f43f"; //generate token
 				conn.updateUserToken(user);
 			}
 			else if (authNumberUsers > 1)
