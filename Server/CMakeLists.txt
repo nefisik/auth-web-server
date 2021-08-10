@@ -6,9 +6,11 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(Poco COMPONENTS Net Util Data MongoDB REQUIRED)
 find_package(Boost)
+find_package(OpenSSL REQUIRED COMPONENTS SSL Crypto)
 # find_package(PostgreSQL REQUIRED)
 
 file(GLOB HEADERS_Server
+		algorithms/include/*.h
 		factory/include/*.h
 		handlers/include/*.h
 		database/mongodb/include/*.h
@@ -17,6 +19,7 @@ file(GLOB HEADERS_Server
 	)
 
 file(GLOB SOURCE_Server
+		algorithms/source/*.cpp
 		factory/source/*.cpp
 		handlers/source/*.cpp
 		database/mongodb/source/*.cpp
@@ -28,11 +31,11 @@ add_library(${PROJECT_NAME} SHARED ${HEADERS_Server} ${SOURCE_Server})
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${Poco_DEFINITIONS})
 
-target_link_directories(${PROJECT_NAME} PUBLIC ${Poco_INCLUDE_DIRS})
+target_link_directories(${PROJECT_NAME} PUBLIC ${Poco_INCLUDE_DIRS} ${OpenSSL_INCLUDE_DIRS})
 
-target_include_directories(${PROJECT_NAME} PUBLIC ${Poco_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${Poco_INCLUDE_DIRS} ${OpenSSL_INCLUDE_DIRS})
 
-target_link_libraries(${PROJECT_NAME} PUBLIC ${Poco_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${Poco_LIBRARIES} ${OpenSSL_LIBRARIES})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 

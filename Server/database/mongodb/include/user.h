@@ -4,10 +4,10 @@
 
 struct User
 {
-	int id;
 	std::string username;
 	std::string password;
+	std::string hashPassword;
 	std::string token;
-	bool tokenValid;
-	bool passwordValid;
+	std::string status;
+	bool userValid;
 };

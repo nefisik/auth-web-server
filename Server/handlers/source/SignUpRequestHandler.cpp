@@ -1,6 +1,7 @@
-#include "handlers/include/LogOutRequestHandler.h"
+#include "handlers/include/SignUpRequestHandler.h"
+#include "algorithms/include/sha256.h"
 
-void LogOutRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response)
+void SignUpRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response)
 {
 	Application &app = Application::instance();
 	app.logger().information("Request from %s", request.clientAddress().toString());
@@ -24,21 +25,18 @@ void LogOutRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerR
 		{
 			MongoConnect conn;
 			// conn.addNewUser(user);
-			int authNumberUsers = conn.authentication(user);
-			if (authNumberUsers == 1)
+			// int authNumberUsers = conn.authentication(user);
+			if (!conn.authentication(user))
 			{
-				user.passwordValid = 1;
-				user.token = "ifcmifw7439f43f"; //generate token
-				conn.updateUserToken(user);
-			}
-			else if (authNumberUsers > 1)
-			{
-				std::cerr << "There is more than one user named " + user.username + "in the database" << std::endl;
-				return;
+				user.hashPassword = sha256(user.password);
+				user.token = "aifcmifw7439f43f"; //generate JWT token
+				conn.addNewUser(user);
 			}
 			else
 			{
-				std::cerr << "Unregistred user" << std::endl;
+				response.setStatus(Poco::Net::HTTPServerResponse::HTTP_UNAUTHORIZED);
+				response.send();
+				std::cerr << "This username is alredy in use" << std::endl;
 				return;
 			}
 		}
@@ -47,6 +45,4 @@ void LogOutRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerR
 			std::cerr << exc.displayText() << std::endl;
 		}
 	}
-
-	// return response.setStatus(Poco::Net::HTTPServerResponse::HTTP_OK);
 }

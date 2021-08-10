@@ -14,7 +14,9 @@ public:
 	int authentication(const User &);
 	std::string getUserHashPassword(const User &);
 	std::string getUserToken(const User &);
+	void updateUserUsername(const User &);
 	void updateUserHashPassword(const User &);
 	void updateUserToken(const User &);
+	void logout(const User &);
 	void deleteUser(const User &);
 };

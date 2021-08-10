@@ -14,8 +14,9 @@ void MongoConnect::addNewUser(const User &user)
 	// With one insert request, we can add multiple documents
 	insertPlayerRequest->addNewDocument()
 		.add(MongoData::username, user.username)
-		.add(MongoData::hashPassword, user.password)
-		.add(MongoData::token, user.token);
+		.add(MongoData::hashPassword, user.hashPassword)
+		.add(MongoData::token, user.token)
+		.add(MongoData::status, user.status);
 
 	connection.sendRequest(*insertPlayerRequest);
 	std::string lastError = db.getLastError(connection);
@@ -128,14 +129,11 @@ void MongoConnect::updateUserHashPassword(const User &user)
 	Poco::MongoDB::Database db(MongoData::DbName);
 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoData::CollectionName);
 	request->selector().add(MongoData::username, user.username);
-	request->update().add(MongoData::username, user.username);
-	request->update().add(MongoData::token, user.token);
-	request->update().add(MongoData::hashPassword, user.password);
-	request->update().add(MongoData::token, user.token);
+	request->update().addNewDocument("$set").add(MongoData::hashPassword, user.hashPassword);
 	connection.sendRequest(*request);
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
 	// std::cout << "LastError: " << lastError->toString(2) << std::endl;
-	if (!lastError.isNull())
+	if (lastError->isType<std::string>("err"))
 	{
 		std::cout << "Last Error: " << lastError->toString(2) << std::endl;
 	}
@@ -155,13 +153,33 @@ void MongoConnect::updateUserToken(const User &user)
 	Poco::MongoDB::Database db(MongoData::DbName);
 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoData::CollectionName);
 	request->selector().add(MongoData::username, user.username);
-	request->update().add(MongoData::username, user.username);
-	request->update().add(MongoData::hashPassword, user.password);
-	request->update().add(MongoData::token, user.token);
+	request->update().addNewDocument("$set").add(MongoData::token, user.token);
 	connection.sendRequest(*request);
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-	// std::cout << "LastError: " << lastError->toString(2) << std::endl;
-	if (lastError.isNull())
+	if (lastError->isType<std::string>("err"))
+	{
+		std::cout << "Last Error: " << lastError->toString(2) << std::endl;
+	}
+	else
+	{
+		std::cout << "ok" << std::endl;
+	}
+}
+
+// UPDATE UserDb SET token = "..." WHERE username = "..."
+void MongoConnect::logout(const User &user)
+{
+	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
+
+	std::cout << "*** logout ***" << std::endl;
+
+	Poco::MongoDB::Database db(MongoData::DbName);
+	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoData::CollectionName);
+	request->selector().add(MongoData::username, user.username);
+	request->update().addNewDocument("$set").add(MongoData::token, user.token);
+	connection.sendRequest(*request);
+	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
+	if (lastError->isType<std::string>("err"))
 	{
 		std::cout << "Last Error: " << lastError->toString(2) << std::endl;
 	}

@@ -6,7 +6,7 @@
 #include "boost/property_tree/ptree.hpp"
 #include "boost/property_tree/json_parser.hpp"
 
-class LogOutRequestHandler: public HTTPRequestHandler
+class SignInRequestHandler: public HTTPRequestHandler
 {
     void handleRequest(HTTPServerRequest& request, HTTPServerResponse& response);
 };

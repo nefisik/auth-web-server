@@ -4,9 +4,10 @@
 
 namespace MongoData
 {
-	std::string DbName = "UsersDb";
-	std::string CollectionName = "users";
-	std::string username = "username";
-	std::string hashPassword = "hashPassword";
-	std::string token = "token";
+	const std::string DbName = "UsersDb";
+	const std::string CollectionName = "users";
+	const std::string username = "username";
+	const std::string hashPassword = "hashPassword";
+	const std::string status = "user";
+	const std::string token = "token";
 } //MongoData

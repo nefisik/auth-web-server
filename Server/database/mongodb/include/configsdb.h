@@ -4,6 +4,6 @@
 
 namespace MongoConfig
 {
-	std::string host = "localhost";
-	int port = 27017;
+	const std::string host = "localhost";
+	const int port = 27017;
 } // MongoConfig
