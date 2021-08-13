@@ -31,7 +31,7 @@ void MongoConnect::addNewUser(const User &user)
 }
 
 // SELECT username WHERE username = "..."
-int MongoConnect::authentication(const User &user)
+bool MongoConnect::authentication(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -90,7 +90,7 @@ std::string MongoConnect::getUserHashPassword(const User &user)
 	return password;
 }
 
-// SELECT hashPassword WHERE username = "..."
+// SELECT token WHERE username = "..."
 std::string MongoConnect::getUserToken(const User &user)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
@@ -117,6 +117,35 @@ std::string MongoConnect::getUserToken(const User &user)
 		response = cursor.next(connection);
 	}
 	return token;
+}
+
+// SELECT token WHERE username = "..."
+std::string MongoConnect::getUserTokenToken(std::string token)
+{
+	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
+
+	std::cout << "*** getUserToken ***" << std::endl;
+	std::string db_token;
+	Poco::MongoDB::Cursor cursor(MongoData::DbName, MongoData::CollectionName);
+	// Selecting fields is done by adding them to the returnFieldSelector
+	// Use 1 as value of the element.
+	cursor.query().selector().add(MongoData::token, token);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			db_token = (*it)->get<std::string>(MongoData::token);
+		}
+		// When the cursorID is 0, there are no documents left, so break out ...
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+		// Get the next bunch of documents
+		response = cursor.next(connection);
+	}
+	return db_token;
 }
 
 // UPDATE UserDb SET hashPassword = "..." WHERE username = "..."
@@ -167,7 +196,7 @@ void MongoConnect::updateUserToken(const User &user)
 }
 
 // UPDATE UserDb SET token = "..." WHERE username = "..."
-void MongoConnect::logout(const User &user)
+void MongoConnect::logout(const std::string token)
 {
 	Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
 
@@ -175,8 +204,8 @@ void MongoConnect::logout(const User &user)
 
 	Poco::MongoDB::Database db(MongoData::DbName);
 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoData::CollectionName);
-	request->selector().add(MongoData::username, user.username);
-	request->update().addNewDocument("$set").add(MongoData::token, user.token);
+	request->selector().add(MongoData::token, token);
+	request->update().addNewDocument("$set").add(MongoData::token, "NULL");
 	connection.sendRequest(*request);
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
 	if (lastError->isType<std::string>("err"))

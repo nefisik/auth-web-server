@@ -6,6 +6,8 @@ void SignUpRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerR
 	Application &app = Application::instance();
 	app.logger().information("Request from %s", request.clientAddress().toString());
 
+	std::cout << "________SIGN_UP________" << std::endl;
+
 	User user;
 
 	if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
@@ -28,16 +30,18 @@ void SignUpRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerR
 			// int authNumberUsers = conn.authentication(user);
 			if (!conn.authentication(user))
 			{
-				user.hashPassword = sha256(user.password);
-				user.token = "aifcmifw7439f43f"; //generate JWT token
+				user.status = MongoData::status;
+				sha256(user);
+				create_token(user); //generate JWT token
 				conn.addNewUser(user);
+
+				response.setStatus(Poco::Net::HTTPServerResponse::HTTP_OK);
 			}
 			else
 			{
 				response.setStatus(Poco::Net::HTTPServerResponse::HTTP_UNAUTHORIZED);
 				response.send();
 				std::cerr << "This username is alredy in use" << std::endl;
-				return;
 			}
 		}
 		catch (const Poco::Exception &exc)

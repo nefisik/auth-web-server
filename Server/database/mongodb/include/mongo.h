@@ -11,12 +11,13 @@ class MongoConnect
 {
 public:
 	void addNewUser(const User &);
-	int authentication(const User &);
+	bool authentication(const User &);
 	std::string getUserHashPassword(const User &);
 	std::string getUserToken(const User &);
+	std::string getUserTokenToken(std::string);
 	void updateUserUsername(const User &);
 	void updateUserHashPassword(const User &);
 	void updateUserToken(const User &);
-	void logout(const User &);
+	void logout(const std::string);
 	void deleteUser(const User &);
 };

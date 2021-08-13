@@ -5,5 +5,6 @@
 #include <sstream>
 #include <string>
 #include <openssl/sha.h>
+#include "database/mongodb/include/user.h"
 
-std::string sha256(const std::string str);
+void sha256(User & user);
