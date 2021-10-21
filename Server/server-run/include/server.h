@@ -12,8 +12,6 @@
 #include "Poco/Net/HTTPClientSession.h"
 #include "Poco/URI.h"
 
-#include "Poco/Net/HTMLForm.h"
-
 using namespace Poco;
 using namespace Poco::Net;
 using namespace Poco::Util;

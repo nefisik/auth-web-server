@@ -6,7 +6,7 @@
 #include "database/include/algorithms/algorithms.h"
 #include "database/include/mongodb/configsdb.h"
 
-class SignInRequestHandler : public HTTPRequestHandler {
+class AuthRefreshTokenHandler : public HTTPRequestHandler {
 public:
     void handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response);
 };

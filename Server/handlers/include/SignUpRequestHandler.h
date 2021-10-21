@@ -1,13 +1,12 @@
 #pragma once
 
-#include "server-run/include/server.h"
-#include "database/mongodb/include/mongo.h"
-#include "database/mongodb/include/user.h"
-#include "boost/property_tree/ptree.hpp"
-#include "boost/property_tree/json_parser.hpp"
-#include "algorithms/include/jwt.h"
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
-class SignUpRequestHandler: public HTTPRequestHandler
-{
-    void handleRequest(HTTPServerRequest& request, HTTPServerResponse& response);
+#include "database/include/algorithms/algorithms.h"
+#include "database/include/mongodb/configsdb.h"
+
+class SignUpRequestHandler : public HTTPRequestHandler {
+public:
+    void handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response);
 };

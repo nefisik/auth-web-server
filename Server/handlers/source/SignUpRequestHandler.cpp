@@ -1,52 +1,76 @@
 #include "handlers/include/SignUpRequestHandler.h"
-#include "algorithms/include/sha256.h"
 
-void SignUpRequestHandler::handleRequest(HTTPServerRequest &request, HTTPServerResponse &response)
+void SignUpRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response)
 {
-	Application &app = Application::instance();
-	app.logger().information("Request from %s", request.clientAddress().toString());
+    request.set("Access-Control-Allow-Origin", CORS);
+    response.set("Access-Control-Allow-Origin", CORS);
+    response.set("Access-Control-Allow-Method", "POST");
 
-	std::cout << "________SIGN_UP________" << std::endl;
+    try
+    {
+        if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
+        {
+            std::unique_ptr<Poco::URI> uri(new Poco::URI(request.getURI()));
 
-	User user;
+            std::string resp_data = "";
+            std::string resp_status = "";
 
-	if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
-	{
-		boost::property_tree::ptree pt;
-		boost::property_tree::read_json(request.stream(), pt);
-		boost::property_tree::ptree::const_iterator it = pt.begin();
-		if (it->first == "username")
-		{
-			user.username = it->second.get_value<std::string>();
-		}
-		if (it->first == "password")
-		{
-			user.password = it->second.get_value<std::string>();
-		}
-		try
-		{
-			MongoConnect conn;
-			// conn.addNewUser(user);
-			// int authNumberUsers = conn.authentication(user);
-			if (!conn.authentication(user))
-			{
-				user.status = MongoData::status;
-				sha256(user);
-				create_token(user); //generate JWT token
-				conn.addNewUser(user);
+            User user;
 
-				response.setStatus(Poco::Net::HTTPServerResponse::HTTP_OK);
-			}
-			else
-			{
-				response.setStatus(Poco::Net::HTTPServerResponse::HTTP_UNAUTHORIZED);
-				response.send();
-				std::cerr << "This username is alredy in use" << std::endl;
-			}
-		}
-		catch (const Poco::Exception &exc)
-		{
-			std::cerr << exc.displayText() << std::endl;
-		}
-	}
+            boost::property_tree::ptree pt;
+            boost::property_tree::read_json(request.stream(), pt);
+            boost::property_tree::ptree::const_iterator it = pt.begin();
+            if (it->first == "username")
+            {
+                user.username = it->second.get_value<std::string>();
+            }
+            ++it;
+            if (it->first == "password")
+            {
+                user.password = it->second.get_value<std::string>();
+            }
+
+            Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
+            MongoConnect::sendAuth(connection);
+
+            if (MongoConnect::identification(user.username, connection) == true)
+                throw Poco::InvalidArgumentException("User with this login already exists");
+
+            user.hashPassword = Auth::sha256(user);
+            MongoConnect::addNewUser(user, connection);
+
+            throw Poco::SignalException("Sign up success");
+        }
+        else
+        {
+            if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
+                response.send();
+            else
+                // error405send(request, response);
+        }
+    }
+    catch (Poco::SignalException &ex)
+    {
+        // complete204send(request, response, ex.message());
+    }
+    catch (const Poco::InvalidArgumentException &ex)
+    {
+        // error400send(request, response, ex.message());
+    }
+    catch (const Poco::Net::NotAuthenticatedException &ex)
+    {
+        // error401send(request, response);
+    }
+    catch (const Poco::NotFoundException &ex)
+    {
+        // error404send(request, response);
+    }
+    catch (const Poco::ApplicationException &ex)
+    {
+        // error500send(request, response, ex.message());
+    }
+    catch (const Poco::Net::ConnectionRefusedException &ex)
+    {
+        // error502send(request, response, ex.message());
+    }
 }

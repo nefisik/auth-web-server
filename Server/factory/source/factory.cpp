@@ -3,6 +3,7 @@
 #include "handlers/include/SignInRequestHandler.h"
 #include "handlers/include/SignOutRequestHandler.h"
 #include "handlers/include/HelloRequestHandler.h"
+#include "handlers/include/AuthRefreshTokenHandler.h"
 #include "Poco/URI.h"
 
 HTTPRequestHandler *HelloRequestHandlerFactory::createRequestHandler(const HTTPServerRequest &request)
@@ -14,17 +15,17 @@ HTTPRequestHandler *HelloRequestHandlerFactory::createRequestHandler(const HTTPS
 		{
 			return new SignUpRequestHandler();
 		}
-		if (uri.getPath() == "/auth/signin/")
+		else if (uri.getPath() == "/auth/signin/")
 		{
 			return new SignInRequestHandler();
 		}
-		if (uri.getPath() == "/auth/signout/")
+		else if (uri.getPath() == "/auth/signout/")
 		{
 			return new SignOutRequestHandler();
 		}
-		if (uri.getPath() == "/hello/")
+		else if (uri.getPath() == "/auth/refresh/")
 		{
-			return new HelloRequestHandler();
+			return new AuthRefreshTokenHandler();
 		}
 	}
 	catch (std::exception &ex)
