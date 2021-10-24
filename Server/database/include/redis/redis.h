@@ -2,8 +2,6 @@
 
 #include <Poco/Redis/Client.h>
 #include <Poco/Redis/Array.h>
-
-#include <Poco/Redis/Client.h>
 #include <Poco/Redis/Command.h>
 
 #include "configsdb.h"

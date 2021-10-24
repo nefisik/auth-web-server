@@ -1,32 +1,35 @@
 #include "factory/include/factory.h"
+#include "factory/include/urls.h"
 #include "handlers/include/SignUpRequestHandler.h"
 #include "handlers/include/SignInRequestHandler.h"
 #include "handlers/include/SignOutRequestHandler.h"
-#include "handlers/include/HelloRequestHandler.h"
 #include "handlers/include/AuthRefreshTokenHandler.h"
 #include "Poco/URI.h"
 
-HTTPRequestHandler *HelloRequestHandlerFactory::createRequestHandler(const HTTPServerRequest &request)
+Poco::Net::HTTPRequestHandler *HelloRequestHandlerFactory::createRequestHandler(const Poco::Net::HTTPServerRequest &request)
 {
 	Poco::URI uri(request.getURI());
+
 	try
 	{
-		if (uri.getPath() == "/auth/signup/")
+		if (uri.getPath() == AuthSignUpURL)
 		{
 			return new SignUpRequestHandler();
 		}
-		else if (uri.getPath() == "/auth/signin/")
+		else if (uri.getPath() == AuthSignInURL)
 		{
 			return new SignInRequestHandler();
 		}
-		else if (uri.getPath() == "/auth/signout/")
+		else if (uri.getPath() == AuthSignOutURL)
 		{
 			return new SignOutRequestHandler();
 		}
-		else if (uri.getPath() == "/auth/refresh/")
+		else if (uri.getPath() == AuthRefreshTokenURL)
 		{
 			return new AuthRefreshTokenHandler();
 		}
+		// else
+			//error 404
 	}
 	catch (std::exception &ex)
 	{

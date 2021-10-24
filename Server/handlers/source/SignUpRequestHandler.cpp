@@ -45,7 +45,7 @@ void SignUpRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
         {
             if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
                 response.send();
-            else
+            // else
                 // error405send(request, response);
         }
     }

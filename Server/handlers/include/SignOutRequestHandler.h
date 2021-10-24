@@ -1,13 +1,8 @@
 #pragma once
 
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
+#include "handlers/include/Base/BaseHandler.h"
 
-#include "database/include/algorithms/algorithms.h"
-#include "database/include/mongodb/mongodata.h"
-#include "database/include/mongodb/configsdb.h"
-
-class SignOutRequestHandler : public HTTPRequestHandler {
+class SignOutRequestHandler : public BaseHandler {
 public:
     SignOutRequestHandler() = default;
 

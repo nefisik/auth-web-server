@@ -1,0 +1,21 @@
+{
+	"MongoDbName" : "UsersDB",
+	"MongoDbCollectionName" : "Users",
+	"MongoDbUserUsername" : "username",
+	"MongoDbUserHashPassword" : "hashPassword",
+	"MongoDbUserAccessTokenLifeTimeMinutes" : "30",
+	"MongoDbHost" : "172.23.192.49",
+	"MongoDbPort" : "27017",
+	"MongoDbUser" : "RCOD_GCOD",
+	"MongoDbPassword" : "bXivE9vIKpkgDewMZFCExu+rRid1x2bxqUaJF5cnTV5stgJtQZwF6pzepktyJWgx+kEZ20FOBIkt/P1j",
+	"MongoDbConnectionString" : "mongodb://RCOD_GCOD:bXivE9vIKpkgDewMZFCExu%2BrRid1x2bxqUaJF5cnTV5stgJtQZwF6pzepktyJWgx%2BkEZ20FOBIkt%2FP1j@172.23.192.49:27017/?authSource=UsersDB&readPreference=primary&appname=MongoDB%20Compass&directConnection=true&ssl=false",
+	"RedisDbHost" : "172.23.192.49",
+	"RedisDbPort" : "6379",
+	"RedisDbPassword" : "g7zMKkRbfnp7aCBEG8/JPZhF/F865kXA1O16QNUqKDcOs7MsmVkd2nh/ZeURpfk+rWSooIxqQXZiGATw",
+	"RedisUserRefreshTokenKey" : "xtG7aozBhqelGJ5vzKNMNWaxuspTQLA7q4/KZhSg6WxbHj6Xsdj//resLsyy5RBU3TgKaALTe5935DRg",
+	"RedisUserAccessTokenKey" : "/zG7YfObZsh4/4n/n0Z1K03pKbmPGh8oGCmdSX9H3Ip/Gj7Xgs3bQV+GjPST4qcCFuu2BoO2Bg8qXIlL",
+	"RedisDbUserAccessTokenLifeTimeSeconds" : "1800",
+	"MaxThreads": "8",
+	"Host": "0.0.0.0",
+	"Port": "8080"
+}

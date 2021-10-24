@@ -1,5 +1,7 @@
-#include "include/algorithms/algorithms.h"
-#include "include/redis/configsJWT.h"
+#include "database/include/algorithms/algorithms.h"
+#include "database/include/redis/configsJWT.h"
+
+#include "handlers/include/Base/BaseHandler.h"
 
 #include <Poco/DateTime.h>
 #include <Poco/DateTimeFormatter.h>
@@ -263,7 +265,7 @@ void authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPSer
         response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
         response.send();
 
-        printLogs(request, response);
+        // printLogs(request, response);
     }
     else
     {

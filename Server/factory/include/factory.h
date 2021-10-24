@@ -2,7 +2,7 @@
 
 #include "server-run/include/server.h"
 
-class HelloRequestHandlerFactory: public HTTPRequestHandlerFactory
+class HelloRequestHandlerFactory: public Poco::Net::HTTPRequestHandlerFactory
 {
-    HTTPRequestHandler* createRequestHandler(const HTTPServerRequest&);
+    Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest&);
 };

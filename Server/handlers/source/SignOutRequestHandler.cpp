@@ -10,13 +10,14 @@ void SignOutRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request,
         if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
         {
             auto refreshToken = request.get("token");
-
-            auto redis = Poco::Redis::Client(RedisConfig::host, RedisConfig::port);
+            
+            Poco::Redis::Client redis;
+            redis.connect(RedisConfig::host, RedisConfig::port);
             Redis::sendAuth(redis, RedisConfig::password);
 
             Redis::del(redis, refreshToken);
 
-            printLogs(request, response);
+            // printLogs(request, response);
 
             throw Poco::SignalException("Logout success");
 
@@ -25,13 +26,13 @@ void SignOutRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request,
         {
             if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS) {
                 response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
-                res#include "Base/BaseHandler.h"ponse.set("Access-Control-Allow-Method", "GET, POST");
+                response.set("Access-Control-Allow-Method", "GET, POST");
                 response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
                 response.send();
 
-                printLogs(request, response);
+                // printLogs(request, response);
             }
-            else
+            // else
                 // error405send(request, response);
         }
     }

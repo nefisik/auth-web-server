@@ -10,7 +10,8 @@ void AuthRefreshTokenHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
         if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
         {
             Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
-            auto redis = Poco::Redis::Client(RedisConfig::host, RedisConfig::port);
+            Poco::Redis::Client redis;
+            redis.connect(RedisConfig::host, RedisConfig::port);
             Redis::sendAuth(redis, RedisConfig::password);
 
             auto refreshToken = request.get("token");
@@ -44,7 +45,7 @@ void AuthRefreshTokenHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
             out << ss.str();
             out.flush();
 
-            printLogs(request, response);
+            // BaseHandler::printLogs(request, response);
         }
         else if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
         {
@@ -53,7 +54,7 @@ void AuthRefreshTokenHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
             response.set("Access-Control-Allow-Headers", "token");
             response.send();
         }
-        else
+        // else
             // error405send(request, response);
     }
     catch (const Poco::InvalidArgumentException &ex)

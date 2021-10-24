@@ -1,11 +1,7 @@
 #include "../include/server.h"
 #include "factory/include/factory.h"
 
-using namespace Poco;
-using namespace Poco::Net;
-using namespace Poco::Util;
-
-void WebServerApp::initialize(Application &self)
+void WebServerApp::initialize(Poco::Util::Application &self)
 {
     loadConfiguration();
     ServerApplication::initialize(self);
@@ -13,11 +9,12 @@ void WebServerApp::initialize(Application &self)
 
 int WebServerApp::main(const std::vector<std::string> &)
 {
-    UInt16 port = static_cast<UInt16>(config().getUInt("port", 8080));
+    Poco::UInt16 port = static_cast<Poco::UInt16>(config().getUInt("port", stoi(getConfigValue("Port"))));
 
-    HTTPServer srv(new HelloRequestHandlerFactory, port);
+    Poco::Net::HTTPServer srv(new HelloRequestHandlerFactory, port);
     srv.start();
-    logger().information("HTTP Server started on port %hu.", port);
+    std::cout << "\n--------------------------------\n" << std::endl;
+    logger().information("HTTP Server started on port %hu", port);
     waitForTerminationRequest();
     logger().information("Stopping HTTP Server...");
     srv.stop();

@@ -1,4 +1,4 @@
-#include "include/redis/redis.h"
+#include "database/include/redis/redis.h"
 
 void Redis::sendAuth(Poco::Redis::Client& client, const std::string& pwd)
 {

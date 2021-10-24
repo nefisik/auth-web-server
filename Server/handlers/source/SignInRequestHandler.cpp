@@ -1,4 +1,4 @@
-#include "include/handlers/SignInRequestHandler.h"
+#include "handlers/include/SignInRequestHandler.h"
 
 void SignInRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response)
 {
@@ -34,7 +34,8 @@ void SignInRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
 
             Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
             MongoConnect::sendAuth(connection);
-            auto redis = Poco::Redis::Client(RedisConfig::host, RedisConfig::port);
+            Poco::Redis::Client redis;
+            redis.connect(RedisConfig::host, RedisConfig::port);
             Redis::sendAuth(redis, RedisConfig::password);
 
             if (MongoConnect::identification(user.username, connection) == false)
@@ -74,13 +75,13 @@ void SignInRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
             out << ss.str();
             out.flush();
 
-            printLogs(request, response);
+            // printLogs(request, response);
         }
         else
         {
             if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
                 response.send();
-            else
+            // else
                 // error405send(request, response);
         }
     }

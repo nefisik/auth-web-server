@@ -10,6 +10,7 @@
 
 #include "database/include/mongodb/user.h"
 #include "database/include/mongodb/mongodata.h"
+#include "handlers/include/Base/BaseHandler.h"
 #include <random>
 
 namespace Auth
