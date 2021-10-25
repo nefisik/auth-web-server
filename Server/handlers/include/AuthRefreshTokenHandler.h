@@ -2,7 +2,8 @@
 
 #include "handlers/include/Base/BaseHandler.h"
 
-class AuthRefreshTokenHandler : public BaseHandler {
+class AuthRefreshTokenHandler : public BaseHandler
+{
 public:
     AuthRefreshTokenHandler() = default;
 

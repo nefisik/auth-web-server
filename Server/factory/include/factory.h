@@ -1,8 +1,9 @@
 #pragma once
 
-#include "server-run/include/server.h"
+#include "Poco/Net/HTTPServer.h"
+#include "handlers/include/Base/BaseHandler.h"
 
-class HelloRequestHandlerFactory: public Poco::Net::HTTPRequestHandlerFactory
+class RequestHandlerFactory: public Poco::Net::HTTPRequestHandlerFactory
 {
     Poco::Net::HTTPRequestHandler* createRequestHandler(const Poco::Net::HTTPServerRequest&);
 };

@@ -1,9 +1,7 @@
 #pragma once
 
 #include "preloader.h"
-#include "Poco/Net/HTTPServer.h"
 #include "Poco/Util/ServerApplication.h"
-#include <iostream>
 
 class WebServerApp : public Poco::Util::ServerApplication
 {

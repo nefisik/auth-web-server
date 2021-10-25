@@ -1,14 +1,11 @@
 #pragma once
 
-#include <memory>
-
 #include <Poco/Net/HTTPRequestHandler.h>
 #include <Poco/Net/HTTPServerRequest.h>
 #include <Poco/Net/HTTPServerResponse.h>
 #include <Poco/Net/NetException.h>
 #include <Poco/Net/MediaType.h>
 #include <Poco/URI.h>
-#include <Poco/Net/NetException.h>
 
 #include "database/include/mongodb/mongo.h"
 #include "database/include/redis/redis.h"
@@ -24,15 +21,19 @@
 class BaseHandler : public Poco::Net::HTTPRequestHandler
 {
 protected:
+	//_______AUTHORIZATION_______
+
+	void authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
+
     //_______RESPONSE_SEND_______
 
 	void printLogs(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
 
-	void sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string &data) const;
+	void sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const;
 
-	void sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string &data) const;
+	void sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const;
 
-	void sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string &refresh, std::string& access) const;
+	void sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &refresh, std::string& access) const;
 
-	void sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string& access) const;
+	void sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string& access) const;
 };

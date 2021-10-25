@@ -25,7 +25,7 @@ file(GLOB SOURCE_Server
 	database/source/redis/*.cpp
 	factory/source/*.cpp
 	handlers/source/*.cpp
-	handlers/include/Base/*.cpp
+	handlers/source/Base/*.cpp
 	server-run/source/*.cpp
 	)
 

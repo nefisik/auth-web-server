@@ -5,7 +5,6 @@
 #include "Poco/MongoDB/Database.h"
 #include "Poco/MongoDB/Cursor.h"
 #include "Poco/MongoDB/Array.h"
-#include <Poco/Net/HTTPServerResponse.h>
 #include <Poco/Net/NetException.h>
 #include "user.h"
 #include "database/include/mongodb/mongodata.h"

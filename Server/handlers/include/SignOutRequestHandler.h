@@ -2,7 +2,8 @@
 
 #include "handlers/include/Base/BaseHandler.h"
 
-class SignOutRequestHandler : public BaseHandler {
+class SignOutRequestHandler : public BaseHandler
+{
 public:
     SignOutRequestHandler() = default;
 

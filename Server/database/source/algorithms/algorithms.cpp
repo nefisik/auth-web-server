@@ -1,8 +1,6 @@
 #include "database/include/algorithms/algorithms.h"
 #include "database/include/redis/configsJWT.h"
 
-#include "handlers/include/Base/BaseHandler.h"
-
 #include <Poco/DateTime.h>
 #include <Poco/DateTimeFormatter.h>
 #include <Poco/Timespan.h>
@@ -254,23 +252,5 @@ bool Auth::check_access_token(const std::string &access_token)
     catch (...)
     {
         throw Poco::ApplicationException();
-    }
-}
-
-void authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response)
-{
-    if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS) {
-        response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
-        response.set("Access-Control-Allow-Method", "GET, POST");
-        response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
-        response.send();
-
-        // printLogs(request, response);
-    }
-    else
-    {
-        auto accessToken = request.get("token");
-        if (Auth::check_access_token(accessToken) == false)
-            throw Poco::Net::NotAuthenticatedException();
     }
 }

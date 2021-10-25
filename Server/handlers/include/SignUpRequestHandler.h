@@ -2,7 +2,8 @@
 
 #include "handlers/include/Base/BaseHandler.h"
 
-class SignUpRequestHandler : public BaseHandler {
+class SignUpRequestHandler : public BaseHandler
+{
 public:
     SignUpRequestHandler() = default;
 

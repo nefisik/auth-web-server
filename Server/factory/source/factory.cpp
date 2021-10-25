@@ -6,7 +6,7 @@
 #include "handlers/include/AuthRefreshTokenHandler.h"
 #include "Poco/URI.h"
 
-Poco::Net::HTTPRequestHandler *HelloRequestHandlerFactory::createRequestHandler(const Poco::Net::HTTPServerRequest &request)
+Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const Poco::Net::HTTPServerRequest &request)
 {
 	Poco::URI uri(request.getURI());
 

@@ -1,14 +1,6 @@
 #include "server-run/include/preloader.h"
 #include "handlers/include/Base/BaseHandler.h"
 
-#include <boost/filesystem.hpp>
-
-#include <Poco/Mutex.h>
-#include <Poco/Exception.h>
-#include <Poco/MD5Engine.h>
-#include <Poco/DigestStream.h>
-#include <iostream>
-
 std::string getHashSum(const std::string &fileContent)
 {
 	Poco::MD5Engine md5;
@@ -20,13 +12,13 @@ std::string getHashSum(const std::string &fileContent)
 
 void WriteOrRewriteConfig()
 {
-	if (!boost::filesystem::exists("configs.json"))
+	if (!boost::filesystem::exists("../../configs.json"))
 		throw Poco::ApplicationException("Not found configs.json in 'Web-Server' ");
 
 	std::cout << "\nStarting Rewriting configs.json\n";
 
-	std::ifstream in2("configs.json");
-	std::ofstream out2("configs.json");
+	std::ifstream in2("../../configs.json");
+	std::ofstream out2("../../configs.json");
 
 	char c1 = in2.get();
 
@@ -45,16 +37,16 @@ void mayBeNotWriteConfig()
 {
 	try
 	{
-		if (boost::filesystem::exists("configs.json"))
+		if (boost::filesystem::exists("../../configs.json"))
 		{
 
-			if (!boost::filesystem::exists("configs.json"))
+			if (!boost::filesystem::exists("../../configs.json"))
 				throw Poco::ApplicationException("Not found configs.json in 'Web-Server' ");
 
 			auto configs_api = boost::property_tree::ptree();
 			auto configs_root = boost::property_tree::ptree();
-			boost::property_tree::read_json("configs.json", configs_api);
-			boost::property_tree::read_json("configs.json", configs_root);
+			boost::property_tree::read_json("../../configs.json", configs_api);
+			boost::property_tree::read_json("../../configs.json", configs_root);
 
 			auto buf1 = std::ostringstream();
 			boost::property_tree::write_json(buf1, configs_api, false);
@@ -81,7 +73,7 @@ std::string getConfigValue(const std::string &val_name)
 	mayBeNotWriteConfig();
 
 	auto configs = boost::property_tree::ptree();
-	boost::property_tree::read_json("configs.json", configs);
+	boost::property_tree::read_json("../../configs.json", configs);
 	auto s = std::string(configs.get<std::string>(val_name));
 
 	std::cout << "\nGETTING\t" + val_name + " --> COMPLETE \n";

@@ -2,7 +2,8 @@
 
 #include "handlers/include/Base/BaseHandler.h"
 
-class SignInRequestHandler : public BaseHandler {
+class SignInRequestHandler : public BaseHandler
+{
 public:
     SignInRequestHandler() = default;
 

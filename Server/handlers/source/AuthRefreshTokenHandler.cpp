@@ -45,7 +45,7 @@ void AuthRefreshTokenHandler::handleRequest(Poco::Net::HTTPServerRequest &reques
             out << ss.str();
             out.flush();
 
-            // BaseHandler::printLogs(request, response);
+            printLogs(request, response);
         }
         else if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
         {

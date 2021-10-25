@@ -10,13 +10,10 @@
 
 #include "database/include/mongodb/user.h"
 #include "database/include/mongodb/mongodata.h"
-#include "handlers/include/Base/BaseHandler.h"
 #include <random>
 
 namespace Auth
 {
-    void authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response);
-
     std::string create_access_token(const User &user);
 
     std::string create_access_token(const std::string &refreshToken);

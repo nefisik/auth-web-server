@@ -1,4 +1,23 @@
-#include "include/handlers/Base/BaseHandler.h"
+#include "handlers/include/Base/BaseHandler.h"
+#include <string>
+
+void BaseHandler::authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
+{
+    if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS) {
+        response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
+        response.set("Access-Control-Allow-Method", "GET, POST");
+        response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
+        response.send();
+
+        printLogs(request, response);
+    }
+    else
+    {
+        auto accessToken = request.get("token");
+        if (Auth::check_access_token(accessToken) == false)
+            throw Poco::Net::NotAuthenticatedException();
+    }
+}
 
 void BaseHandler::printLogs(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
 {
@@ -14,7 +33,7 @@ void BaseHandler::printLogs(Poco::Net::HTTPServerRequest &request, Poco::Net::HT
 	std::cout << std::endl << std::endl;
 }
 
-void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string &data) const
+void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -23,10 +42,10 @@ void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net:
 	boost::property_tree::ptree root;
 	root.put("Date Time", Poco::DateTimeFormatter().format(Poco::LocalDateTime().timestamp(), "%Y.%n.%d %H:%M:%S"));
 	root.put("CONTENT-TYPE", "application/json");
-	root.put_child("RESPONSE", elements);
+	root.put_child("RESPONSE", elem);
 
 	std::stringstream ss;
-	boost::property_tree::json_parser::write_json(ss, resp);
+	boost::property_tree::json_parser::write_json(ss, root);
 
     response.setStatus(status);
 	Poco::Net::MediaType type("application/json");
@@ -38,7 +57,7 @@ void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net:
 	printLogs(request, response);
 }
 
-void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string &data) const
+void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -48,10 +67,10 @@ void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::
 	boost::property_tree::ptree root;
 	root.put("Date Time", Poco::DateTimeFormatter().format(Poco::LocalDateTime().timestamp(), "%Y.%n.%d %H:%M:%S"));
 	root.put("CONTENT-TYPE", "application/json");
-	root.put_child("RESPONSE", elements);
+	root.put_child("RESPONSE", elem);
 
 	std::stringstream ss;
-	boost::property_tree::json_parser::write_json(ss, resp);
+	boost::property_tree::json_parser::write_json(ss, root);
 
     response.setStatus(status);
 	Poco::Net::MediaType type("application/json");
@@ -63,7 +82,7 @@ void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::
 	printLogs(request, response);
 }
 
-void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string &refresh, std::string& access) const
+void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &refresh, std::string& access) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -74,10 +93,10 @@ void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco
 	boost::property_tree::ptree root;
 	root.put("Date Time", Poco::DateTimeFormatter().format(Poco::LocalDateTime().timestamp(), "%Y.%n.%d %H:%M:%S"));
 	root.put("CONTENT-TYPE", "application/json");
-	root.put_child("RESPONSE", elements);
+	root.put_child("RESPONSE", elem);
 
 	std::stringstream ss;
-	boost::property_tree::json_parser::write_json(ss, resp);
+	boost::property_tree::json_parser::write_json(ss, root);
 
     response.setStatus(status);
 	Poco::Net::MediaType type("application/json");
@@ -89,7 +108,7 @@ void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco
 	printLogs(request, response);
 }
 
-void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse &status, std::string &msg, std::string& access) const
+void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string& access) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -99,10 +118,10 @@ void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco
 	boost::property_tree::ptree root;
 	root.put("Date Time", Poco::DateTimeFormatter().format(Poco::LocalDateTime().timestamp(), "%Y.%n.%d %H:%M:%S"));
 	root.put("CONTENT-TYPE", "application/json");
-	root.put_child("RESPONSE", elements);
+	root.put_child("RESPONSE", elem);
 
 	std::stringstream ss;
-	boost::property_tree::json_parser::write_json(ss, resp);
+	boost::property_tree::json_parser::write_json(ss, root);
 
     response.setStatus(status);
 	Poco::Net::MediaType type("application/json");
