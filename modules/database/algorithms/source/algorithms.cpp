@@ -61,19 +61,19 @@ std::string Auth::create_refresh_token(const User &user)
     }
     catch (const jwt::TokenExpiredError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::SignatureFormatError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::DecodeError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::VerificationError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (...)
     {
@@ -109,19 +109,19 @@ std::string Auth::create_access_token(const User &user)
     }
     catch (const jwt::TokenExpiredError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::SignatureFormatError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::DecodeError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::VerificationError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (...)
     {
@@ -161,19 +161,19 @@ std::string Auth::create_access_token(const std::string &refreshToken)
     }
     catch (const jwt::TokenExpiredError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::SignatureFormatError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::DecodeError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::VerificationError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (...)
     {
@@ -194,19 +194,19 @@ bool Auth::check_refresh_token(const std::string &refresh_token)
     }
     catch (const jwt::TokenExpiredError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::SignatureFormatError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::DecodeError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::VerificationError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (...)
     {
@@ -235,19 +235,19 @@ bool Auth::check_access_token(const std::string &access_token)
     }
     catch (const jwt::TokenExpiredError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::SignatureFormatError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::DecodeError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (const jwt::VerificationError &e)
     {
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
     }
     catch (...)
     {

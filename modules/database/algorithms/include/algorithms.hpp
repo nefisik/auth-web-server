@@ -8,6 +8,16 @@
 #include "jwt/jwt.hpp"
 #include "Poco/Net/NetException.h"
 
+#include "Poco/MongoDB/MongoDB.h"
+#include "Poco/MongoDB/Connection.h"
+#include "Poco/MongoDB/Database.h"
+#include "Poco/MongoDB/Cursor.h"
+#include "Poco/MongoDB/Array.h"
+
+#include <Poco/Redis/Client.h>
+#include <Poco/Redis/Array.h>
+#include <Poco/Redis/Command.h>
+
 #include "database/mongodb/include/user.hpp"
 #include "database/mongodb/include/mongodata.hpp"
 #include <random>

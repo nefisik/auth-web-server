@@ -12,9 +12,6 @@ void SignUpRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
         {
             std::unique_ptr<Poco::URI> uri(new Poco::URI(request.getURI()));
 
-            std::string resp_data = "";
-            std::string resp_status = "";
-
             User user;
 
             boost::property_tree::ptree pt;
@@ -31,7 +28,7 @@ void SignUpRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
             }
 
             Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
-            MongoConnect::sendAuth(connection);
+            MongoConnect::sendAuth(connection, MongoConfig::password);
 
             if (MongoConnect::identification(user.username, connection) == true)
                 throw Poco::InvalidArgumentException("User with this login already exists");
@@ -39,38 +36,42 @@ void SignUpRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
             user.hashPassword = Auth::sha256(user);
             MongoConnect::addNewUser(user, connection);
 
-            throw Poco::SignalException("Sign up success");
+            int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK;
+            std::string msg = "Sign up success";
+
+            sendResponse(request, response, status, msg);
         }
         else
         {
             if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
                 response.send();
-            // else
-                // error405send(request, response);
+            else
+                throw Poco::NotFoundException();
         }
-    }
-    catch (Poco::SignalException &ex)
-    {
-        // complete204send(request, response, ex.message());
     }
     catch (const Poco::InvalidArgumentException &ex)
     {
-        // error400send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_REQUEST;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Net::NotAuthenticatedException &ex)
     {
-        // error401send(request, response);
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_UNAUTHORIZED;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::NotFoundException &ex)
     {
-        // error404send(request, response);
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_NOT_FOUND;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::ApplicationException &ex)
     {
-        // error500send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Net::ConnectionRefusedException &ex)
     {
-        // error502send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_GATEWAY;
+        sendResponse(request, response, status, ex.message());
     }
 }

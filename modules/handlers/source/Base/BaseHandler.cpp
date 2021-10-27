@@ -21,19 +21,17 @@ void BaseHandler::authorizationUser(Poco::Net::HTTPServerRequest &request, Poco:
 
 void BaseHandler::printLogs(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
 {
-	std::cout << std::endl << std::endl;
-
-	std::cout << "Date Time: \t" + Poco::DateTimeFormatter().format(Poco::LocalDateTime().timestamp(), "%Y.%n.%d %H:%M:%S");
-	std::cout << "CLIENT HOST: \t" + request.clientAddress().host().toString() << std::endl;
-	std::cout << "METHOD: \t" + request.getMethod() << std::endl;
-	std::cout << "URI : \t" + request.getURI() << std::endl;
-	std::cout << "RESPONSE STATUS: \t" + std::to_string(response.getStatus()) << std::endl;
-	std::cout << "CONTENT_TYPE \t" + response.getContentType() << std::endl;
-
-	std::cout << std::endl << std::endl;
+	std::cout << std::endl << std::endl
+			  << std::setw(17) << std::left << "Date Time:" << Poco::DateTimeFormatter().format(Poco::LocalDateTime().timestamp(), "%Y.%n.%d %H:%M:%S") << std::endl
+			  << std::setw(17) << std::left << "CLIENT HOST:" << request.clientAddress().host().toString() << std::endl
+			  << std::setw(17) << std::left << "METHOD:" << request.getMethod() << std::endl
+			  << std::setw(17) << std::left << "URI:" << request.getURI() << std::endl
+			  << std::setw(17) << std::left << "RESPONSE STATUS:" << std::to_string(response.getStatus()) << std::endl
+			  << std::setw(17) << std::left << "CONTENT_TYPE:" << response.getContentType() << std::endl
+			  << std::endl << std::endl;
 }
 
-void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const
+void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -47,7 +45,7 @@ void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net:
 	std::stringstream ss;
 	boost::property_tree::json_parser::write_json(ss, root);
 
-    response.setStatus(status);
+    response.setStatus(std::to_string(status));
 	Poco::Net::MediaType type("application/json");
 	response.setContentType(type);
 	std::ostream &out = response.send();
@@ -57,7 +55,7 @@ void BaseHandler::sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net:
 	printLogs(request, response);
 }
 
-void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const
+void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &data) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -72,7 +70,7 @@ void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::
 	std::stringstream ss;
 	boost::property_tree::json_parser::write_json(ss, root);
 
-    response.setStatus(status);
+    response.setStatus(std::to_string(status));
 	Poco::Net::MediaType type("application/json");
 	response.setContentType(type);
 	std::ostream &out = response.send();
@@ -82,7 +80,7 @@ void BaseHandler::sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::
 	printLogs(request, response);
 }
 
-void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &refresh, std::string& access) const
+void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &refresh, const std::string& access) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -98,7 +96,7 @@ void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco
 	std::stringstream ss;
 	boost::property_tree::json_parser::write_json(ss, root);
 
-    response.setStatus(status);
+    response.setStatus(std::to_string(status));
 	Poco::Net::MediaType type("application/json");
 	response.setContentType(type);
 	std::ostream &out = response.send();
@@ -108,7 +106,7 @@ void BaseHandler::sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco
 	printLogs(request, response);
 }
 
-void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string& access) const
+void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string& access) const
 {
 	boost::property_tree::ptree elem;
 	elem.put<std::string>("STATUS", std::to_string(status));
@@ -123,7 +121,7 @@ void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco
 	std::stringstream ss;
 	boost::property_tree::json_parser::write_json(ss, root);
 
-    response.setStatus(status);
+    response.setStatus(std::to_string(status));
 	Poco::Net::MediaType type("application/json");
 	response.setContentType(type);
 	std::ostream &out = response.send();

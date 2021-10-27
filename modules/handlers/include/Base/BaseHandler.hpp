@@ -29,11 +29,11 @@ protected:
 
 	void printLogs(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
 
-	void sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const;
+	void sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg) const;
 
-	void sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &data) const;
+	void sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &data) const;
 
-	void sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string &refresh, std::string& access) const;
+	void sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &refresh, const std::string& access) const;
 
-	void sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, Poco::Net::HTTPResponse::HTTPStatus &status, std::string &msg, std::string& access) const;
+	void sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string& access) const;
 };

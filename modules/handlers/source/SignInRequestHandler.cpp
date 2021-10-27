@@ -13,10 +13,6 @@ void SignInRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
         {
             std::unique_ptr<Poco::URI> uri(new Poco::URI(request.getURI()));
 
-            std::string resp_data1 = "";
-            std::string resp_data2 = "";
-            std::string resp_status = "";
-
             User user;
 
             boost::property_tree::ptree pt;
@@ -33,13 +29,13 @@ void SignInRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
             }
 
             Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
-            MongoConnect::sendAuth(connection);
+            MongoConnect::sendAuth(connection, MongoConfig::password);
             Poco::Redis::Client redis;
             redis.connect(RedisConfig::host, RedisConfig::port);
             Redis::sendAuth(redis, RedisConfig::password);
 
             if (MongoConnect::identification(user.username, connection) == false)
-                throw Poco::Net::NotAuthenticatedException("Failed user identifacation");
+                throw Poco::Net::NotAuthenticatedException("User does not exist");
 
             auto userHashPassword = MongoConnect::getUserHashPassword(user.username, connection);
             user.hashPassword = Auth::sha256(user);
@@ -52,61 +48,52 @@ void SignInRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, 
                 Redis::set(redis, user.refreshToken, user.accessToken);
                 Redis::expire(redis, user.refreshToken, JWTparams::accessTokenLifetimeSeconds);
 
-                response.setStatus(Poco::Net::HTTPServerResponse::HTTP_OK);
-                resp_status = "200";
-                resp_data1 = user.refreshToken;
-                resp_data2 = user.accessToken;
+                std::string refresh = user.refreshToken;
+                std::string access = user.accessToken;
+                int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK;
+                std::string msg = "OK";
+
+                sendResponseTokens(request, response, status, msg, refresh, access);
             }
             else
-                throw Poco::Net::NotAuthenticatedException();
-
-            boost::property_tree::ptree resp;
-            resp.put("STATUS", resp_status);
-            resp.put("COMMENT", "OK");
-            resp.put("REFRESH", resp_data1);
-            resp.put("ACCESS", resp_data2);
-
-            std::stringstream ss;
-            boost::property_tree::json_parser::write_json(ss, resp);
-
-            Poco::Net::MediaType type("application/json");
-            response.setContentType(type);
-            std::ostream &out = response.send();
-            out << ss.str();
-            out.flush();
-
-            // printLogs(request, response);
+                throw Poco::Net::NotAuthenticatedException("Unauthorized");
         }
         else
         {
             if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
                 response.send();
-            // else
-                // error405send(request, response);
+            else
+                throw Poco::NotFoundException();
         }
     }
     catch (const Poco::InvalidArgumentException &ex)
     {
-        // error400send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_REQUEST;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Net::NotAuthenticatedException &ex)
     {
-        // error401send(request, response);
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_UNAUTHORIZED;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::NotFoundException &ex)
     {
-        // error404send(request, response);
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_NOT_FOUND;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::ApplicationException &ex)
     {
-        // error500send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Net::ConnectionRefusedException &ex)
     {
-        // error502send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_GATEWAY;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Redis::RedisException &ex)
     {
-        // error502send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_GATEWAY;
+        sendResponse(request, response, status, ex.message());
     }
 }

@@ -10,17 +10,17 @@ void SignOutRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request,
         if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST)
         {
             auto refreshToken = request.get("token");
-            
+
             Poco::Redis::Client redis;
             redis.connect(RedisConfig::host, RedisConfig::port);
             Redis::sendAuth(redis, RedisConfig::password);
 
             Redis::del(redis, refreshToken);
 
-            // printLogs(request, response);
+            int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK;
+            std::string msg = "Sign out success";
 
-            throw Poco::SignalException("Logout success");
-
+            sendResponse(request, response, status, msg);
         }
         else
         {
@@ -30,38 +30,40 @@ void SignOutRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request,
                 response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
                 response.send();
 
-                // printLogs(request, response);
+                printLogs(request, response);
             }
-            // else
-                // error405send(request, response);
+            else
+                throw Poco::NotFoundException();
         }
-    }
-    catch (const Poco::SignalException &ex)
-    {
-        // complete204send(request, response, ex.message());
     }
     catch (const Poco::InvalidArgumentException &ex)
     {
-        // error400send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_REQUEST;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Net::NotAuthenticatedException &ex)
     {
-        // error401send(request, response);
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_UNAUTHORIZED;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::NotFoundException &ex)
     {
-        // error404send(request, response);
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_NOT_FOUND;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::ApplicationException &ex)
     {
-        // error500send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Net::ConnectionRefusedException &ex)
     {
-        // error502send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_GATEWAY;
+        sendResponse(request, response, status, ex.message());
     }
     catch (const Poco::Redis::RedisException &ex)
     {
-        // error502send(request, response, ex.message());
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_GATEWAY;
+        sendResponse(request, response, status, ex.message());
     }
 }

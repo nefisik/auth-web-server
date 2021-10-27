@@ -1,9 +1,9 @@
 #include "database/mongodb/include/mongo.hpp"
 
-void MongoConnect::sendAuth(Poco::MongoDB::Connection& connection)
+void MongoConnect::sendAuth(Poco::MongoDB::Connection& connection, const std::string& pwd)
 {
-    Poco::MongoDB::Database db(MongoConfig::DbName);
-    if(!db.authenticate(connection, MongoConfig::user, MongoConfig::password))
+    Poco::MongoDB::Database db(MongoConfig::DbAuthName);
+    if(!db.authenticate(connection, MongoConfig::user, pwd))
 		throw Poco::Net::ConnectionRefusedException("MongoDB authentication failed");
 }
 
@@ -74,7 +74,7 @@ std::string MongoConnect::getUserHashPassword(const std::string &username, Poco:
 		response = cursor.next(connection);
 	};
 	if (hash_password.empty())
-		throw Poco::Net::NotAuthenticatedException("Failed get user hash password");
+		throw Poco::Net::NotAuthenticatedException("Unauthorized");
 
 	return hash_password;
 }

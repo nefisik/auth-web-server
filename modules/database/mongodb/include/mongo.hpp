@@ -12,7 +12,7 @@
 
 namespace MongoConnect
 {
-    void sendAuth(Poco::MongoDB::Connection&);
+    void sendAuth(Poco::MongoDB::Connection&, const std::string&);
     void addNewUser(const User&, Poco::MongoDB::Connection&);
     bool identification(const std::string&, Poco::MongoDB::Connection&);
     std::string getUserHashPassword(const std::string&, Poco::MongoDB::Connection&);

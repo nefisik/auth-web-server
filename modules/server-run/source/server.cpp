@@ -13,8 +13,7 @@ int WebServerApp::main(const std::vector<std::string> &)
 
     Poco::Net::HTTPServer srv(new RequestHandlerFactory, port);
     srv.start();
-    std::cout << "\n--------------------------------\n" << std::endl;
-    logger().information("HTTP Server started on port %hu", port);
+    starter();
     waitForTerminationRequest();
     logger().information("Stopping HTTP Server...");
     srv.stop();

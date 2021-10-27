@@ -15,3 +15,9 @@ void WriteOrRewriteConfig();
 void mayBeNotWriteConfig();
 
 std::string getConfigValue(const std::string &val_name);
+
+void checkMongoDbConnection();
+
+void checkRedisDbConnection();
+
+void starter();

@@ -10,6 +10,7 @@ namespace MongoConfig
     const std::string user = getConfigValue("MongoDbUser");
     const std::string password = getConfigValue("MongoDbPassword");
     const std::string connectionString = getConfigValue("MongoDbConnectionString");
+    const std::string DbAuthName = getConfigValue("MongoDbAuthenticationName");
     const std::string DbName = getConfigValue("MongoDbName");
     const std::string CollectionName = getConfigValue("MongoDbCollectionName");
 } // MongoConfig

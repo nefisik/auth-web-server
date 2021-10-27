@@ -25,7 +25,7 @@ void Redis::del(Poco::Redis::Client& redis, std::string& refreshToken)
 {
     auto delCmd = Poco::Redis::Command::del(refreshToken);
     if (!redis.execute<Poco::Int64>(delCmd))
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
 }
 
 std::string Redis::get(Poco::Redis::Client& redis, std::string& refreshToken)
@@ -33,7 +33,7 @@ std::string Redis::get(Poco::Redis::Client& redis, std::string& refreshToken)
     auto gCmd = Poco::Redis::Command::get(refreshToken);
     auto accessToken = redis.execute<Poco::Redis::BulkString>(gCmd);
     if (accessToken.isNull())
-        throw Poco::Net::NotAuthenticatedException();
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
 	
 	return accessToken.value();
 }
