@@ -1,5 +1,4 @@
 #include "handlers/include/Base/BaseHandler.hpp"
-#include <string>
 
 void BaseHandler::authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
 {
@@ -127,6 +126,17 @@ void BaseHandler::sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco
 	std::ostream &out = response.send();
 	out << ss.str();
 	out.flush();
+
+	printLogs(request, response);
+}
+
+void BaseHandler::setOptions(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
+{
+    response.setContentType("application/json");
+    response.setKeepAlive(true); 
+    response.add("Access-Control-Allow-Headers", CORS);
+    response.add("Access-Control-Allow-Method", "POST");
+    response.send();
 
 	printLogs(request, response);
 }

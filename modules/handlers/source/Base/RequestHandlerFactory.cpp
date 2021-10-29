@@ -1,10 +1,4 @@
 #include "handlers/include/Base/RequestHandlerFactory.hpp"
-#include "handlers/include/Base/urls.hpp"
-#include "handlers/include/SignUpRequestHandler.hpp"
-#include "handlers/include/SignInRequestHandler.hpp"
-#include "handlers/include/SignOutRequestHandler.hpp"
-#include "handlers/include/AuthRefreshTokenHandler.hpp"
-#include "Poco/URI.h"
 
 Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const Poco::Net::HTTPServerRequest &request)
 {
@@ -14,26 +8,33 @@ Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const
 	{
 		if (uri.getPath() == AuthSignUpURL)
 		{
-			return new SignUpRequestHandler();
+			return new AuthRequestHandler(AuthCommands::SIGN_UP);
 		}
 		else if (uri.getPath() == AuthSignInURL)
 		{
-			return new SignInRequestHandler();
+			return new AuthRequestHandler(AuthCommands::SIGN_IN);
 		}
 		else if (uri.getPath() == AuthSignOutURL)
 		{
-			return new SignOutRequestHandler();
+			return new AuthRequestHandler(AuthCommands::SIGN_OUT);
 		}
 		else if (uri.getPath() == AuthRefreshTokenURL)
 		{
-			return new AuthRefreshTokenHandler();
+			return new AuthRequestHandler(AuthCommands::REFRESH);
 		}
-		// else
-			//error 404
+		else
+		{
+			// int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_NOT_FOUND;
+			// std::string msg = "Method not found";
+        	// sendResponse(request, response, status, msg);
+		}
 	}
-	catch (std::exception &ex)
+	catch (...)
 	{
-		ex.what();
+		// int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
+		// std::string msg = "Internal server error";
+        // sendResponse(request, response, status, msg);
 	}
+
 	return nullptr;
 }

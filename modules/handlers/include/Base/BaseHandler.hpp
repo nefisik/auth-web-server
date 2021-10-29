@@ -9,7 +9,7 @@
 
 #include "database/mongodb/include/mongo.hpp"
 #include "database/redis/include/redis.hpp"
-#include "handlers/include/Base/urls.hpp"
+#include "handlers/include/Base/static/urls.hpp"
 
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -36,4 +36,6 @@ protected:
 	void sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &refresh, const std::string& access) const;
 
 	void sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string& access) const;
+
+	void setOptions(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
 };

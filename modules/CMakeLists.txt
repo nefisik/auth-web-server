@@ -15,6 +15,8 @@ file(GLOB HEADERS_Server
 	database/redis/include/*.hpp
 	handlers/include/*.hpp
 	handlers/include/Base/*.hpp
+	handlers/include/Base/static/*.hpp
+	methods/include/*.hpp
 	server-run/include/*.hpp
 	)
 
@@ -24,6 +26,7 @@ file(GLOB SOURCE_Server
 	database/redis/source/*.cpp
 	handlers/source/*.cpp
 	handlers/source/Base/*.cpp
+	methods/source/*.cpp
 	server-run/source/*.cpp
 	)
 

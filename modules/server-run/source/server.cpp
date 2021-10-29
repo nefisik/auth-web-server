@@ -21,4 +21,4 @@ int WebServerApp::main(const std::vector<std::string> &)
     return Application::EXIT_OK;
 }
 
-POCO_SERVER_MAIN(WebServerApp)
+// POCO_SERVER_MAIN(WebServerApp)
