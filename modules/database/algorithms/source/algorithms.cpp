@@ -44,213 +44,98 @@ std::string Auth::sha256(const User &user)
 
 std::string Auth::create_refresh_token(const User &user)
 {
-    try
-    {
-        auto key = JWTparams::refreshTokenKey;
-        auto jti = Auth::random_string(30);
+    auto key = JWTparams::refreshTokenKey;
+    auto jti = Auth::random_string(30);
 
-        jwt::jwt_object obj{
-            jwt::params::algorithm("HS256"),
-            jwt::params::payload({{JWTparams::username, user.username},
-                                  {JWTparams::jti, jti}}),
-            jwt::params::secret(key)};
+    jwt::jwt_object obj{
+        jwt::params::algorithm("HS256"),
+        jwt::params::payload({{JWTparams::username, user.username},
+                              {JWTparams::jti, jti}}),
+        jwt::params::secret(key)};
 
-        auto enc_str = obj.signature();
+    auto enc_str = obj.signature();
 
-        return enc_str;
-    }
-    catch (const jwt::TokenExpiredError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::SignatureFormatError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::DecodeError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::VerificationError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (...)
-    {
-        throw Poco::ApplicationException();
-    }
+    return enc_str;
 }
 
 std::string Auth::create_access_token(const User &user)
 {
-    try
-    {
-        auto key = JWTparams::accessTokenKey;
-        auto jti = Auth::random_string(30);
+    auto key = JWTparams::accessTokenKey;
+    auto jti = Auth::random_string(30);
 
-        auto iat_time = Poco::DateTime();
-        auto exp_time = iat_time + Poco::Timespan(0, 0, JWTparams::accessTokenLifetimeMinutes, 0, 0);
+    auto iat_time = Poco::DateTime();
+    auto exp_time = iat_time + Poco::Timespan(0, 0, JWTparams::accessTokenLifetimeMinutes, 0, 0);
 
-        auto formatter = Poco::DateTimeFormatter();
-        auto iat = formatter.format(iat_time.timestamp(), Poco::DateTimeFormat::SORTABLE_FORMAT);
-        auto exp = formatter.format(exp_time, Poco::DateTimeFormat::SORTABLE_FORMAT);
+    auto formatter = Poco::DateTimeFormatter();
+    auto iat = formatter.format(iat_time.timestamp(), Poco::DateTimeFormat::SORTABLE_FORMAT);
+    auto exp = formatter.format(exp_time, Poco::DateTimeFormat::SORTABLE_FORMAT);
 
-        jwt::jwt_object obj{
-            jwt::params::algorithm("HS256"),
-            jwt::params::payload({{JWTparams::username, user.username},
-                                  {JWTparams::jti, jti},
-                                  {JWTparams::iat, iat},
-                                  {JWTparams::exp, exp}}),
-            jwt::params::secret(key)};
+    jwt::jwt_object obj{
+        jwt::params::algorithm("HS256"),
+        jwt::params::payload({{JWTparams::username, user.username},
+                              {JWTparams::jti, jti},
+                              {JWTparams::iat, iat},
+                              {JWTparams::exp, exp}}),
+        jwt::params::secret(key)};
 
-        auto enc_str = obj.signature();
+    auto enc_str = obj.signature();
 
-        return enc_str;
-    }
-    catch (const jwt::TokenExpiredError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::SignatureFormatError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::DecodeError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::VerificationError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (...)
-    {
-        throw Poco::ApplicationException();
-    }
+    return enc_str;
 }
 
 std::string Auth::create_access_token(const std::string &refreshToken)
 {
-    try
-    {
-        auto dec_refreshToken = jwt::decode(refreshToken, jwt::params::algorithms({"HS256"}), jwt::params::secret(JWTparams::refreshTokenKey));
+    auto dec_refreshToken = jwt::decode(refreshToken, jwt::params::algorithms({"HS256"}), jwt::params::secret(JWTparams::refreshTokenKey));
 
-        auto username = dec_refreshToken.payload().get_claim_value<std::string>(JWTparams::username);
+    auto username = dec_refreshToken.payload().get_claim_value<std::string>(JWTparams::username);
 
-        auto key = JWTparams::accessTokenKey;
-        auto jti = Auth::random_string(30);
+    auto key = JWTparams::accessTokenKey;
+    auto jti = Auth::random_string(30);
 
-        auto iat_time = Poco::DateTime();
-        auto exp_time = iat_time + Poco::Timespan(0, 0, JWTparams::accessTokenLifetimeMinutes, 0, 0);
+    auto iat_time = Poco::DateTime();
+    auto exp_time = iat_time + Poco::Timespan(0, 0, JWTparams::accessTokenLifetimeMinutes, 0, 0);
 
-        auto formatter = Poco::DateTimeFormatter();
-        auto iat = formatter.format(iat_time.timestamp(), Poco::DateTimeFormat::SORTABLE_FORMAT);
-        auto exp = formatter.format(exp_time, Poco::DateTimeFormat::SORTABLE_FORMAT);
+    auto formatter = Poco::DateTimeFormatter();
+    auto iat = formatter.format(iat_time.timestamp(), Poco::DateTimeFormat::SORTABLE_FORMAT);
+    auto exp = formatter.format(exp_time, Poco::DateTimeFormat::SORTABLE_FORMAT);
 
-        jwt::jwt_object accessToken{
-            jwt::params::algorithm("HS256"),
-            jwt::params::payload({{JWTparams::username, username},
-                                  {JWTparams::jti, jti},
-                                  {JWTparams::iat, iat},
-                                  {JWTparams::exp, exp}}),
-            jwt::params::secret(key)};
+    jwt::jwt_object accessToken{
+        jwt::params::algorithm("HS256"),
+        jwt::params::payload({{JWTparams::username, username},
+                              {JWTparams::jti, jti},
+                              {JWTparams::iat, iat},
+                              {JWTparams::exp, exp}}),
+        jwt::params::secret(key)};
 
-        auto enc_accessToken = accessToken.signature();
+    auto enc_accessToken = accessToken.signature();
 
-        return enc_accessToken;
-    }
-    catch (const jwt::TokenExpiredError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::SignatureFormatError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::DecodeError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::VerificationError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (...)
-    {
-        throw Poco::ApplicationException();
-    }
+    return enc_accessToken;
 }
 
 bool Auth::check_refresh_token(const std::string &refresh_token)
 {
-    try
-    {
-        auto dec_obj = jwt::decode(refresh_token,
-                                   jwt::params::algorithms({"HS256"}),
-                                   jwt::params::secret(JWTparams::refreshTokenKey),
-                                   jwt::params::verify(true));
+    auto dec_obj = jwt::decode(refresh_token,
+                               jwt::params::algorithms({"HS256"}),
+                               jwt::params::secret(JWTparams::refreshTokenKey),
+                               jwt::params::verify(true));
 
-        return true;
-    }
-    catch (const jwt::TokenExpiredError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::SignatureFormatError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::DecodeError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::VerificationError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (...)
-    {
-        throw Poco::ApplicationException();
-    }
+    return true;
 }
 
 bool Auth::check_access_token(const std::string &access_token)
 {
-    try
-    {
-        auto dec_obj = jwt::decode(access_token,
-                                   jwt::params::algorithms({"HS256"}),
-                                   jwt::params::secret(JWTparams::accessTokenKey),
-                                   jwt::params::verify(true));
+    auto dec_obj = jwt::decode(access_token,
+                               jwt::params::algorithms({"HS256"}),
+                               jwt::params::secret(JWTparams::accessTokenKey),
+                               jwt::params::verify(true));
 
-        auto iat_time = Poco::DateTime();
-        auto exp = dec_obj.payload().get_claim_value<std::string>(JWTparams::exp);
+    auto iat_time = Poco::DateTime();
+    auto exp = dec_obj.payload().get_claim_value<std::string>(JWTparams::exp);
 
-        auto dif = 0;
-        auto exp_time = Poco::DateTimeParser::parse(Poco::DateTimeFormat::SORTABLE_FORMAT, exp, dif);
-        if (iat_time < exp_time)
-            return true;
+    auto dif = 0;
+    auto exp_time = Poco::DateTimeParser::parse(Poco::DateTimeFormat::SORTABLE_FORMAT, exp, dif);
+    if (iat_time < exp_time)
+        return true;
 
-        return false;
-    }
-    catch (const jwt::TokenExpiredError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::SignatureFormatError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::DecodeError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (const jwt::VerificationError &e)
-    {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-    }
-    catch (...)
-    {
-        throw Poco::ApplicationException();
-    }
+    return false;
 }

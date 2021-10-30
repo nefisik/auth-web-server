@@ -150,6 +150,11 @@ void AuthRequestHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Po
         int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_METHOD_NOT_ALLOWED;
         sendResponse(request, response, status, ex.message());
     }
+    catch (...)
+    {
+        int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_UNAUTHORIZED;
+        sendResponse(request, response, status, "Unauthorized");
+    }
 }
 
 std::string AuthRequestHandler::getToken(Poco::Net::HTTPServerRequest &request)
