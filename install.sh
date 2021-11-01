@@ -6,11 +6,11 @@ printf "\n ---------------------- \n\n"
 
 apt-get update
 
-printf "\n ---------------------- \n"
-printf "    Installing Git, Cmake, GCC, build-essential"
-printf "\n ---------------------- \n\n"
+printf "\n -------------------------- \n"
+printf "    Installing base utils"
+printf "\n -------------------------- \n\n"
 
-apt-get install -y git cmake libgtest-dev build-essential gcc-10 g++-10 
+apt-get install -y git wget cmake libgtest-dev build-essential gcc-10 g++-10 
 
 printf "\n ---------------------- \n"
 printf "    Installing Poco"
@@ -30,9 +30,9 @@ printf "\n ---------------------- \n\n"
 
 apt-get -y install libssh-dev
 
-printf "\n ------------------------- \n"
-printf " Installing nlohmann-json3"
-printf "\n ------------------------- \n\n"
+printf "\n ----------------------------- \n"
+printf "   Installing nlohmann-json3"
+printf "\n ---------------------------- \n\n"
 
 apt-get install nlohmann-json3-dev
 
@@ -52,5 +52,24 @@ rm -rf cpp-jwt
 cd
 
 printf "\n ---------------------- \n"
-printf "   Installation completed"
+printf "   Installing MongoDB"
 printf "\n ---------------------- \n\n"
+
+wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -
+apt update
+apt-get install gnupg
+echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-5.0.list
+apt-get update
+apt-get install -y mongodb-org
+apt-get install -y mongodb-org=5.0.2 mongodb-org-database=5.0.2 mongodb-org-server=5.0.2 mongodb-org-shell=5.0.2 mongodb-org-mongos=5.0.2 mongodb-org-tools=5.0.2
+systemctl start mongod
+
+printf "\n ---------------------- \n"
+printf "    Installing Redis"
+printf "\n ---------------------- \n\n"
+
+apt-get install -y redis
+
+printf "\n -------------------------- \n"
+printf "   Installation completed"
+printf "\n -------------------------- \n\n"
