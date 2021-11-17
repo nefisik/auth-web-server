@@ -1,10 +1,12 @@
 #pragma once
 
-#include "server-run/include/preloader.hpp"
+#include "server/include/preloader.hpp"
+#include <algorithm>
 
 namespace RedisConfig
 {
-    const std::string host = getConfigValue("RedisDbHost");
-    const int port = stoi(getConfigValue("RedisDbPort"));
-    const std::string password = getConfigValue("RedisDbPassword");
+    const std::string host = Preloader::getConfigValue("RedisDbHost");
+    const int port = stoi(Preloader::getConfigValue("RedisDbPort"));
+    const std::string password = Preloader::getConfigValue("RedisDbPassword");
+
 } // MongoConfig

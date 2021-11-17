@@ -1,16 +1,18 @@
 #pragma once
 
 #include <string>
-#include "server-run/include/preloader.hpp"
+#include "server/include/preloader.hpp"
+#include <algorithm>
 
 namespace MongoConfig
 {
-    const std::string host = getConfigValue("MongoDbHost");
-    const int port = stoi(getConfigValue("MongoDbPort"));
-    const std::string user = getConfigValue("MongoDbUser");
-    const std::string password = getConfigValue("MongoDbPassword");
-    const std::string connectionString = getConfigValue("MongoDbConnectionString");
-    const std::string DbAuthName = getConfigValue("MongoDbAuthenticationName");
-    const std::string DbName = getConfigValue("MongoDbName");
-    const std::string CollectionName = getConfigValue("MongoDbCollectionName");
+    const std::string host = Preloader::getConfigValue("MongoDbHost");
+    const int port = stoi(Preloader::getConfigValue("MongoDbPort"));
+    const std::string user = Preloader::getConfigValue("MongoDbUser");
+    const std::string password = Preloader::getConfigValue("MongoDbPassword");
+    const std::string connectionString = Preloader::getConfigValue("MongoDbConnectionString");
+    const std::string DbAuthName = Preloader::getConfigValue("MongoDbAuthenticationName");
+    const std::string DbName = Preloader::getConfigValue("MongoDbName");
+    const std::string CollectionName = Preloader::getConfigValue("MongoDbCollectionName");
+
 } // MongoConfig

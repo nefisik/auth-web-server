@@ -1,30 +1,43 @@
 #include "database/mongodb/include/mongo.hpp"
 
-void MongoConnect::sendAuth(Poco::MongoDB::Connection& connection, const std::string& pwd)
+Mongo::Mongo()
 {
-    Poco::MongoDB::Database db(MongoConfig::DbAuthName);
-    if(!db.authenticate(connection, MongoConfig::user, pwd))
-		throw Poco::Net::ConnectionRefusedException("MongoDB authentication failed");
+    connection.connect(MongoConfig::host, MongoConfig::port);
+    Mongo::sendAuth(MongoConfig::password);
 }
 
-// INSERT INTO users(username, hashPassword) VALUES(..., ...)
-void MongoConnect::addNewUser(const User &user, Poco::MongoDB::Connection& connection)
+void Mongo::sendAuth(const std::string& dbPassword)
+{
+    Poco::MongoDB::Database db(MongoConfig::DbAuthName);
+    if(!db.authenticate(connection, MongoConfig::user, dbPassword))
+	{
+		throw Poco::Net::ConnectionRefusedException("MongoDB authentication failed");
+	}
+}
+
+// INSERT INTO users(username, mail, hashPassword, status, verification, mailVerification) VALUES(..., ...)
+void Mongo::addUser(const User& user)
 {
 	Poco::MongoDB::Database db(MongoConfig::DbName);
 	Poco::SharedPtr<Poco::MongoDB::InsertRequest> insertPlayerRequest = db.createInsertRequest(MongoConfig::CollectionName);
 	insertPlayerRequest->addNewDocument()
 		.add(MongoData::username, user.username)
-		.add(MongoData::hashPassword, user.hashPassword);
-		// .add(MongoData::status, user.status);
+		.add(MongoData::mail, user.mail)
+		.add(MongoData::hashPassword, user.hashPassword)
+		.add(MongoData::status, MongoData::params::STATUS_USER)
+		.add(MongoData::verification, MongoData::params::VERIFICATION_FALSE)
+		.add(MongoData::mailVerification, MongoData::params::MAIL_VERIFICATION_FALSE);
 
 	connection.sendRequest(*insertPlayerRequest);
 	std::string lastError = db.getLastError(connection);
 	if (!lastError.empty())
-        throw Poco::ApplicationException(db.getLastError(connection));
+	{
+		throw Poco::ApplicationException(db.getLastError(connection));
+	}
 }
 
 // SELECT username WHERE username = "..."
-bool MongoConnect::identification(const std::string &username, Poco::MongoDB::Connection& connection)
+bool Mongo::identification(const std::string& username)
 {
 	int auth = 0;
 	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
@@ -34,30 +47,55 @@ bool MongoConnect::identification(const std::string &username, Poco::MongoDB::Co
 	{
 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
 		{
-			// std::cout << (*it)->get<std::string>(MongoData::username) << std::endl;
 			++auth;
 		}
 		if (response.cursorID() == 0)
 		{
 			break;
 		}
-		// Get the next bunch of documents
-		response = cursor.next(connection);
-	};
-	if(auth == 0)
-		return false;
-	if(auth == 1)
-		return true;
-	if(auth > 1)
-		throw Poco::InvalidArgumentException("User with this login already exists");
 
-	return false;
+		response = cursor.next(connection);
+	}
+	if(auth == 0)
+	{
+		return false;
+	}
+
+	return true;
 }
 
-// SELECT hashPassword WHERE username = "..."
-std::string MongoConnect::getUserHashPassword(const std::string &username, Poco::MongoDB::Connection& connection)
+void Mongo::checkMail(const std::string& mail, const std::string& username)
 {
-	std::string hash_password;
+	int numMail = 0;
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::mail, mail);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			std::string user = (*it)->get<std::string>(MongoData::username);
+			if (user != username)
+			{
+				++numMail;
+			}
+		}
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+
+		response = cursor.next(connection);
+	}
+	if(numMail >= 1)
+	{
+		throw Poco::InvalidArgumentException("Пользователь с данной почтой уже существует");
+	}
+}
+
+void Mongo::checkVerification(const std::string& username)
+{
+	std::string verif;
 	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
 	cursor.query().selector().add(MongoData::username, username);
 	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
@@ -65,211 +103,353 @@ std::string MongoConnect::getUserHashPassword(const std::string &username, Poco:
 	{
 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
 		{
-			hash_password = (*it)->get<std::string>(MongoData::hashPassword);
+			verif = (*it)->get<std::string>(MongoData::verification);
 		}
 		if (response.cursorID() == 0)
 		{
 			break;
 		}
 		response = cursor.next(connection);
-	};
-	if (hash_password.empty())
-		throw Poco::Net::NotAuthenticatedException("Unauthorized");
+	}
+	if (verif.empty())
+	{
+		throw Poco::ApplicationException("Failed get user verification");
+	}
 
-	return hash_password;
+	if(verif != MongoData::params::VERIFICATION_TRUE)
+	{
+		throw Poco::InvalidArgumentException("Вы неверифицированный пользователь.<br/>Дождитесь верификации администратором");
+	}
 }
 
-/**************************************BACKLOG**************************************/
+void Mongo::checkMailVerification(const std::string& username)
+{
+	std::string mailVerif;
+	std::string mail;
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::username, username);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			mailVerif = (*it)->get<std::string>(MongoData::mailVerification);
+			mail = (*it)->get<std::string>(MongoData::mail);
+		}
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+		response = cursor.next(connection);
+	}
+	if (mailVerif.empty())
+	{
+		throw Poco::ApplicationException("Failed get user mail verification");
+	}
 
-// // UPDATE users SET username = "..." WHERE username = "..."
-// void MongoConnect::updateUserUsername(const std::string &username, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::username, username);
-// 	request->update().addNewDocument("$set").add(MongoData::username, username);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 	if (lastError->isType<std::string>("err"))
-//         throw Poco::ApplicationException(lastError->toString(2));
-// }
+	if(mailVerif != MongoData::params::MAIL_VERIFICATION_TRUE)
+	{
+		throw Poco::InvalidAccessException("Вы не подтвердили почту.<br/>Перейдите по ссылке, отправленной на почту " + mail);
+	}
+}
 
-// // UPDATE users SET hashPassword = "..." WHERE username = "..."
-// void MongoConnect::updateUserHashPassword(const User &user, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::username, user.username);
-// 	request->update().addNewDocument("$set").add(MongoData::hashPassword, user.hashPassword);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 		throw Poco::ApplicationException(lastError->toString(2));
-// }
+void Mongo::checkHashPassword(const std::string& username, const std::string& hashPassword)
+{
+	std::string db_hashPassword;
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::username, username);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			db_hashPassword = (*it)->get<std::string>(MongoData::hashPassword);
+		}
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+		response = cursor.next(connection);
+	}
+	if (db_hashPassword.empty())
+	{
+		throw Poco::ApplicationException("Failed get user hash password");
+	}
 
-// // DELETE FROM UsersDb WHERE username = "..."
-// void MongoConnect::deleteUser(const std::string &username, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::DeleteRequest> request = db.createDeleteRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::username, username);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 	if (lastError->isType<std::string>("err"))
-//         throw Poco::ApplicationException(lastError->toString(2));
-// }
+	if(db_hashPassword != hashPassword)
+	{
+		throw Poco::InvalidArgumentException("Неверный пароль");
+	}
+}
 
-/*************************************DEPRECATED************************************/
+// SELECT status WHERE username = "..."
+std::string Mongo::getStatus(const std::string& username)
+{
+	std::string status;
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::username, username);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			status = (*it)->get<std::string>(MongoData::status);
+		}
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+		response = cursor.next(connection);
+	}
+	if (status.empty())
+	{
+		throw Poco::ApplicationException("Failed get user status");
+	}
 
-// // UPDATE users SET accessToken = "NULL" WHERE username = "..."
-// void MongoConnect::updateUserAccessToken(const User &user, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::username, user.username);
-// 	request->update().addNewDocument("$set").add(MongoData::accessToken, user.accessToken);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 	if (lastError->isType<std::string>("err"))
-//     	throw Poco::ApplicationException(lastError->toString(2));
-// }
+	return status;
+}
 
-// // UPDATE users SET accessToken = "..." WHERE refreshToken = "..."
-// void MongoConnect::updateUserAccessToken(const std::string &refreshToken, const std::string &accessToken, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::refreshToken, refreshToken);
-// 	request->update().addNewDocument("$set").add(MongoData::accessToken, accessToken);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 	if (lastError->isType<std::string>("err"))
-//     	throw Poco::ApplicationException(lastError->toString(2));
-// }
+// SELECT username WHERE mail = "..."
+std::string Mongo::getUsername(const std::string& mail)
+{
+	std::string username;
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::mail, mail);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			username = (*it)->get<std::string>(MongoData::username);
+		}
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+		response = cursor.next(connection);
+	}
+	if (username.empty())
+	{
+		throw Poco::InvalidArgumentException("Неверная почта");
+	}
 
-// // UPDATE users SET refreshToken = "NULL" WHERE username = "..."
-// void MongoConnect::updateUserRefreshToken(const User &user, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::username, user.username);
-// 	request->update().addNewDocument("$set").add(MongoData::refreshToken, user.refreshToken);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 	if (lastError->isType<std::string>("err"))
-//         throw Poco::ApplicationException(lastError->toString(2));
-// }
+	return username;
+}
 
-// // UPDATE users SET accessToken = "NULL" WHERE refreshToken = "..."
-// void MongoConnect::logout(const std::string &refreshToken, Poco::MongoDB::Connection& connection)
-// {
-// 	Poco::MongoDB::Database db(MongoConfig::DbName);
-// 	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
-// 	request->selector().add(MongoData::refreshToken, refreshToken);
-// 	request->update().addNewDocument("$set").add(MongoData::refreshToken, MongoData::tokenNULL);
-// 	request->update().addNewDocument("$set").add(MongoData::accessToken, MongoData::tokenNULL);
-// 	connection.sendRequest(*request);
-// 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
-// 	if (lastError->isType<std::string>("err"))
-//         throw Poco::ApplicationException(lastError->toString(2));
-// }
+void Mongo::verifyMail(const std::string& username)
+{
+	Poco::MongoDB::Database db(MongoConfig::DbName);
+	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
+	request->selector().add(MongoData::username, username);
+	request->update().addNewDocument("$set").add(MongoData::mailVerification, MongoData::params::MAIL_VERIFICATION_TRUE);
+	connection.sendRequest(*request);
+	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
+	if (lastError->isType<std::string>("err"))
+	{
+		throw Poco::ApplicationException(lastError->toString(2));
+	}
+}
 
-// // SELECT refreshToken WHERE username = "..."
-// std::string MongoConnect::getUserRefreshToken(const std::string &username, Poco::MongoDB::Connection& connection)
-// {
-// 	std::string refresh_token;
-// 	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
-// 	cursor.query().selector().add(MongoData::username, username);
-// 	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
-// 	for (;;)
-// 	{
-// 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
-// 		{
-// 			refresh_token = (*it)->get<std::string>(MongoData::refreshToken);
-// 		}
-// 		if (response.cursorID() == 0)
-// 		{
-// 			break;
-// 		}
-// 		response = cursor.next(connection);
-// 	};
-// 	if (refresh_token.empty())
-// 		throw Poco::Net::NotAuthenticatedException("Failed get user refresh token");
+/***************************************ADMIN**************************************/
 
-// 	return refresh_token;
-// }
+// UPDATE users SET ... = "..." WHERE username = "..."
+void Mongo::adminUpdateData(const UpdateData& data)
+{
+	Poco::MongoDB::Database db(MongoConfig::DbName);
+	Poco::SharedPtr<Poco::MongoDB::UpdateRequest> request = db.createUpdateRequest(MongoConfig::CollectionName);
+	request->selector().add(MongoData::username, data.username);
+	request->update().addNewDocument("$set").add(data.field, data.newData);
+	connection.sendRequest(*request);
+	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
+	if (lastError->isType<std::string>("err"))
+	{
+		throw Poco::ApplicationException(lastError->toString(2));
+	}
+}
 
-// // SELECT accessToken WHERE token = "..."
-// std::string MongoConnect::getUserAccessToken(const std::string &refreshToken, Poco::MongoDB::Connection& connection)
-// {
-// 	std::string db_access_token;
-// 	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
-// 	cursor.query().selector().add(MongoData::refreshToken, refreshToken);
-// 	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
-// 	for (;;)
-// 	{
-// 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
-// 		{
-// 			db_access_token = (*it)->get<std::string>(MongoData::accessToken);
-// 		}
-// 		if (response.cursorID() == 0)
-// 		{
-// 			break;
-// 		}
-// 		// Get the next bunch of documents
-// 		response = cursor.next(connection);
-// 	};
-// 	if (db_access_token.empty())
-// 		throw Poco::Net::NotAuthenticatedException("Failed get user access token");
+std::vector<User> Mongo::adminGetAllUsers()
+{
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	Poco::MongoDB::ResponseMessage& response = cursor.next(connection);
 
-// 	return db_access_token;
-// }
+	std::vector<User> allUsers;
+	User user;
 
-// // SELECT refreshToken WHERE refreshToken = "..."
-// void MongoConnect::checkRefreshToken(const std::string &refreshToken, Poco::MongoDB::Connection &connection)
-// {
-// 	int auth = 0;
-// 	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
-// 	cursor.query().selector().add(MongoData::refreshToken, refreshToken);
-// 	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
-// 	for (;;)
-// 	{
-// 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
-// 		{
-// 			// std::cout << (*it)->get<std::string>(MongoData::username) << std::endl;
-// 			++auth;
-// 		}
-// 		if (response.cursorID() == 0)
-// 		{
-// 			break;
-// 		}
-// 		// Get the next bunch of documents
-// 		response = cursor.next(connection);
-// 	}
-// 	if (auth == 0)
-//         throw Poco::Net::NotAuthenticatedException("Failed check user refresh token");
-// }
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			user.username = (*it)->get<std::string>(MongoData::username);
+			user.mail = (*it)->get<std::string>(MongoData::mail);
+			user.status = (*it)->get<std::string>(MongoData::status);
+			user.verification = (*it)->get<std::string>(MongoData::verification);
+			user.mailVerification = (*it)->get<std::string>(MongoData::mailVerification);
 
-// // SELECT accessToken WHERE accessToken = "..."
-// void MongoConnect::checkAccessToken(const std::string &accessToken, Poco::MongoDB::Connection &connection)
-// {
-// 	int auth = 0;
-// 	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
-// 	cursor.query().selector().add(MongoData::accessToken, accessToken);
-// 	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
-// 	for (;;)
-// 	{
-// 		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
-// 		{
-// 			// std::cout << (*it)->get<std::string>(MongoData::username) << std::endl;
-// 			++auth;
-// 		}
-// 		if (response.cursorID() == 0)
-// 		{
-// 			break;
-// 		}
-// 		// Get the next bunch of documents
-// 		response = cursor.next(connection);
-// 	}
-// 	if (auth == 0)
-// 		throw Poco::Net::NotAuthenticatedException("Failed check user access token");
-// }
+			allUsers.emplace_back(user);
+		}
+
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+
+		response = cursor.next(connection);
+	}
+
+	return allUsers;
+}
+
+std::vector<User> Mongo::adminGetAllUnverifiedUsers()
+{
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::verification, MongoData::params::VERIFICATION_FALSE);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+
+	std::vector<User> unverifiedUsers;
+	User user;
+
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			user.username = (*it)->get<std::string>(MongoData::username);
+			user.mail = (*it)->get<std::string>(MongoData::mail);
+			user.status = (*it)->get<std::string>(MongoData::status);
+			user.verification = (*it)->get<std::string>(MongoData::verification);
+			user.mailVerification = (*it)->get<std::string>(MongoData::mailVerification);
+
+			unverifiedUsers.emplace_back(user);
+		}
+
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+
+		response = cursor.next(connection);
+	}
+
+	return unverifiedUsers;
+}
+
+std::vector<User> Mongo::adminGetAllUnverifiedMailUsers()
+{
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::verification, MongoData::params::MAIL_VERIFICATION_FALSE);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+
+	std::vector<User> unverifiedMailUsers;
+	User user;
+
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			user.username = (*it)->get<std::string>(MongoData::username);
+			user.mail = (*it)->get<std::string>(MongoData::mail);
+			user.status = (*it)->get<std::string>(MongoData::status);
+			user.verification = (*it)->get<std::string>(MongoData::verification);
+			user.mailVerification = (*it)->get<std::string>(MongoData::mailVerification);
+
+			unverifiedMailUsers.emplace_back(user);
+		}
+
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+
+		response = cursor.next(connection);
+	}
+
+	return unverifiedMailUsers;
+}
+
+std::vector<User> Mongo::adminGetAllAdmins()
+{
+	Poco::MongoDB::Cursor cursor(MongoConfig::DbName, MongoConfig::CollectionName);
+	cursor.query().selector().add(MongoData::status, MongoData::params::STATUS_ADMIN);
+	Poco::MongoDB::ResponseMessage &response = cursor.next(connection);
+
+	std::vector<User> unverifiedUsers;
+	User user;
+
+	for (;;)
+	{
+		for (Poco::MongoDB::Document::Vector::const_iterator it = response.documents().begin(); it != response.documents().end(); ++it)
+		{
+			user.username = (*it)->get<std::string>(MongoData::username);
+			user.mail = (*it)->get<std::string>(MongoData::mail);
+			user.status = (*it)->get<std::string>(MongoData::status);
+			user.verification = (*it)->get<std::string>(MongoData::verification);
+			user.mailVerification = (*it)->get<std::string>(MongoData::mailVerification);
+
+			unverifiedUsers.emplace_back(user);
+		}
+
+		if (response.cursorID() == 0)
+		{
+			break;
+		}
+
+		response = cursor.next(connection);
+	}
+
+	return unverifiedUsers;
+}
+
+// INSERT INTO users(username, hashPassword, mail) VALUES(..., ...)
+void Mongo::adminAddUser(const User& user)
+{
+	Poco::MongoDB::Database db(MongoConfig::DbName);
+	Poco::SharedPtr<Poco::MongoDB::InsertRequest> insertPlayerRequest = db.createInsertRequest(MongoConfig::CollectionName);
+	insertPlayerRequest->addNewDocument()
+		.add(MongoData::username, user.username)
+		.add(MongoData::mail, user.mail)
+		.add(MongoData::hashPassword, user.hashPassword)
+		.add(MongoData::status, MongoData::params::STATUS_USER)
+		.add(MongoData::verification, MongoData::params::VERIFICATION_TRUE)
+		.add(MongoData::mailVerification, MongoData::params::MAIL_VERIFICATION_FALSE);
+
+	connection.sendRequest(*insertPlayerRequest);
+	std::string lastError = db.getLastError(connection);
+	if (!lastError.empty())
+	{
+		throw Poco::ApplicationException(db.getLastError(connection));
+	}
+}
+
+// INSERT INTO users(username, hashPassword, mail) VALUES(..., ...)
+void Mongo::adminAddAdmin(const User& user)
+{
+	Poco::MongoDB::Database db(MongoConfig::DbName);
+	Poco::SharedPtr<Poco::MongoDB::InsertRequest> insertPlayerRequest = db.createInsertRequest(MongoConfig::CollectionName);
+	insertPlayerRequest->addNewDocument()
+		.add(MongoData::username, user.username)
+		.add(MongoData::mail, user.mail)
+		.add(MongoData::hashPassword, user.hashPassword)
+		.add(MongoData::status, MongoData::params::STATUS_ADMIN)
+		.add(MongoData::verification, MongoData::params::VERIFICATION_TRUE)
+		.add(MongoData::mailVerification, MongoData::params::MAIL_VERIFICATION_FALSE);
+
+	connection.sendRequest(*insertPlayerRequest);
+	std::string lastError = db.getLastError(connection);
+	if (!lastError.empty())
+	{
+		throw Poco::ApplicationException(db.getLastError(connection));
+	}
+}
+
+// DELETE FROM UsersDb WHERE username = "..."
+void Mongo::adminDeleteUser(const std::string& username)
+{
+	Poco::MongoDB::Database db(MongoConfig::DbName);
+	Poco::SharedPtr<Poco::MongoDB::DeleteRequest> request = db.createDeleteRequest(MongoConfig::CollectionName);
+	request->selector().add(MongoData::username, username);
+	connection.sendRequest(*request);
+	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
+	if (lastError->isType<std::string>("err"))
+	{
+		throw Poco::ApplicationException(lastError->toString(2));
+	}
+}

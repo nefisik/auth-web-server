@@ -1,8 +1,9 @@
-#include "handlers/include/Base/BaseHandler.hpp"
+#include "server/include/Base/BaseHandler.hpp"
 
 void BaseHandler::authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
 {
-    if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS) {
+    if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
+    {
         response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
         response.set("Access-Control-Allow-Method", "GET, POST");
         response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
@@ -12,9 +13,54 @@ void BaseHandler::authorizationUser(Poco::Net::HTTPServerRequest &request, Poco:
     }
     else
     {
-        auto accessToken = request.get("token");
-        if (Auth::check_access_token(accessToken) == false)
-            throw Poco::Net::NotAuthenticatedException();
+        if(!request.has(FrontData::token))
+        {
+            throw Poco::InvalidArgumentException("'token' field is missing");
+        }
+        const auto accessToken = request.get(FrontData::token);
+        try
+        {
+            if (Auth::checkAccessToken(accessToken, MongoData::params::STATUS_USER) == false)
+            {
+                throw Poco::Net::NotAuthenticatedException("UNAUTHORIZED");
+            }
+        }
+        catch(...)
+        {
+            throw Poco::Net::NotAuthenticatedException("UNAUTHORIZED");
+        }
+    }
+}
+
+void BaseHandler::authorizationAdmin(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const
+{
+    if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
+    {
+        response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
+        response.set("Access-Control-Allow-Method", "GET, POST");
+        response.set("Access-Control-Allow-Headers", "token, Content-Type, Accept");
+        response.send();
+
+        printLogs(request, response);
+    }
+    else
+    {
+        if(!request.has(FrontData::token))
+        {
+            throw Poco::InvalidArgumentException("'token' field is missing");
+        }
+        const auto accessToken = request.get(FrontData::token);
+        try
+        {
+            if (Auth::checkAccessToken(accessToken, MongoData::params::STATUS_ADMIN) == false)
+            {
+                throw Poco::Net::NotAuthenticatedException("UNAUTHORIZED");
+            }
+        }
+        catch(...)
+        {
+            throw Poco::Net::NotAuthenticatedException("UNAUTHORIZED");
+        }
     }
 }
 

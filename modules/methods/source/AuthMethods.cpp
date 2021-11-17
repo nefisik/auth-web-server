@@ -1,74 +1,159 @@
 #include "methods/include/AuthMethods.hpp"
 
-void AuthMethods::SIGN_UP(User user)
+AuthMethods::AuthMethods() = default;
+AuthMethods::~AuthMethods() = default;
+
+void AuthMethods::signUp(const std::string username, const std::string password, const std::string mail)
 {
-    Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
-    MongoConnect::sendAuth(connection, MongoConfig::password);
+    User user;
+    user.username = username;
+    user.password = password;
+    user.mail = mail;
 
-    if (MongoConnect::identification(user.username, connection) == true)
-        throw Poco::InvalidArgumentException("User with this login already exists");
+    if(mongo.identification(user.username))
+    {
+        throw Poco::InvalidArgumentException("Пользователь с данным логином уже существует");
+    }
 
-    user.hashPassword = Auth::sha256(user);
-    MongoConnect::addNewUser(user, connection);
+    mongo.checkMail(mail, username);
+
+    user.hashPassword = Algo::sha256(user.password);
+    mongo.addUser(user);
+
+    std::string msg = "Для подтверждения регистрации в системе КВиВДИ пользователя "
+        + user.username
+        + " перейдите по ссылке ниже:\n\nhttp://"
+        + MessageLink::signUpVerifyLink
+        + Auth::createSignUpToken(user);
+
+    Mail send(mail, MessageTitle::SIGN_UP_VERIFICATION, msg);
 }
 
-std::pair<std::string, std::string> AuthMethods::SIGN_IN(User user)
+void AuthMethods::signUpVerify(const std::string signUpToken)
 {
-    Poco::MongoDB::Connection connection(MongoConfig::host, MongoConfig::port);
-    MongoConnect::sendAuth(connection, MongoConfig::password);
-    Poco::Redis::Client redis;
-    redis.connect(RedisConfig::host, RedisConfig::port);
-    Redis::sendAuth(redis, RedisConfig::password);
+    std::string username = Auth::checkSignUpToken(signUpToken);
+    mongo.verifyMail(username);
+}
 
-    if (MongoConnect::identification(user.username, connection) == false)
-        throw Poco::Net::NotAuthenticatedException("User does not exist");
+std::string AuthMethods::signIn(const std::string username, const std::string password)
+{
+    User user;
+    user.username = username;
+    user.password = password;
 
-    auto userHashPassword = MongoConnect::getUserHashPassword(user.username, connection);
-    user.hashPassword = Auth::sha256(user);
-
-    if (userHashPassword == user.hashPassword)
+    if(!mongo.identification(user.username))
     {
-        user.refreshToken = Auth::create_refresh_token(user);
-        user.accessToken = Auth::create_access_token(user);
+        throw Poco::InvalidArgumentException("Неверный логин");
+    }
 
-        Redis::set(redis, user.refreshToken, user.accessToken);
-        Redis::expire(redis, user.refreshToken, JWTparams::accessTokenLifetimeSeconds);
+    user.hashPassword = Algo::sha256(user.password);
+    mongo.checkHashPassword(user.username, user.hashPassword);
+    mongo.checkMailVerification(user.username);
+    mongo.checkVerification(user.username);
 
-        std::pair<std::string, std::string> tokens = std::make_pair(user.refreshToken, user.accessToken);
+    user.status = mongo.getStatus(user.username);
+    user.refreshToken = Auth::createRefreshToken(user);
+    user.accessToken = Auth::createAccessToken(user);
 
-        return tokens;
+    redis.set(user.refreshToken, user.accessToken);
+    redis.expire(user.refreshToken, JWTparams::refreshTokenLifetimeSeconds);
+
+    new_json["RESPONSE"]["STATUS"] = "200";
+    new_json["RESPONSE"]["COMMENT"] = "OK";
+    new_json["RESPONSE"]["MESSAGE"] = "Sign in success";
+    new_json["RESPONSE"]["STATUS"] = user.status;
+    new_json["RESPONSE"]["REFRESH"] = user.refreshToken;
+    new_json["RESPONSE"]["ACCESS"] = user.accessToken;
+
+    std::string result;
+    ArduinoJson::serializeJson(new_json, result);
+    return result;
+}
+
+std::string AuthMethods::refresh(const std::string refreshToken)
+{
+    if (!Auth::checkRefreshToken(refreshToken))
+    {
+        throw Poco::Net::NotAuthenticatedException("Unauthorized");
+    }
+
+    auto accessToken = redis.get(refreshToken);
+
+    if (Auth::checkAccessToken(accessToken, MongoData::params::STATUS_USER))
+    {
+        accessToken = Auth::createAccessToken(refreshToken);
+        redis.set(refreshToken, accessToken);
+        redis.expire(refreshToken, JWTparams::refreshTokenLifetimeSeconds);
     }
     else
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-}
-
-void AuthMethods::SIGN_OUT(std::string refreshToken)
-{
-    Poco::Redis::Client redis;
-    redis.connect(RedisConfig::host, RedisConfig::port);
-    Redis::sendAuth(redis, RedisConfig::password);
-
-    Redis::del(redis, refreshToken);
-}
-
-std::string AuthMethods::REFRESH(std::string refreshToken)
-{
-    Poco::Redis::Client redis;
-    redis.connect(RedisConfig::host, RedisConfig::port);
-    Redis::sendAuth(redis, RedisConfig::password);
-
-    if (!Auth::check_refresh_token(refreshToken))
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
-
-    auto accessToken = Redis::get(redis, refreshToken);
-    if (Auth::check_access_token(accessToken))
     {
-        accessToken = Auth::create_access_token(refreshToken);
-        Redis::set(redis, refreshToken, accessToken);
-        Redis::expire(redis, refreshToken, JWTparams::accessTokenLifetimeSeconds);
+        redis.del(refreshToken);
     }
-    else
-        Redis::del(redis, refreshToken);
 
-    return accessToken;
+    new_json["RESPONSE"]["STATUS"] = "200";
+    new_json["RESPONSE"]["COMMENT"] = "OK";
+    new_json["RESPONSE"]["MESSAGE"] = "Refresh token success";
+    new_json["RESPONSE"]["ACCESS"] = accessToken;
+
+    std::string result;
+    ArduinoJson::serializeJson(new_json, result);
+    return result;
+}
+
+void AuthMethods::signOut(const std::string refreshToken)
+{
+    redis.del(refreshToken);
+}
+
+void AuthMethods::mailPasswordRecovery(const std::string mail)
+{
+    User user;
+    user.username = mongo.getUsername(mail);
+    user.status = mongo.getStatus(user.username);
+
+    std::string msg = "Чтобы получить доступ к системе КВиВДИ для пользователя "
+        + user.username
+        + " перейдите по ссылке ниже для изменения пароля:\n\nhttp://"
+        + MessageLink::recoveryPwdLink
+        + Auth::createRecoveryToken(user)
+        + "\n\nСсылка действительна в течение 12 часов";
+
+    Mail send(mail, MessageTitle::RECOVERY_PASSWORD, msg);
+}
+
+std::string AuthMethods::checkRecoveryToken(const std::string recoveryToken)
+{
+    std::string username = Auth::checkRecoveryToken(recoveryToken);
+
+    new_json["RESPONSE"]["STATUS"] = "200";
+    new_json["RESPONSE"]["COMMENT"] = "OK";
+    new_json["RESPONSE"]["MESSAGE"] = "Check recovery password success";
+    new_json["RESPONSE"]["DATA"]["USERNAME"] = username;
+    new_json["RESPONSE"]["DATA"]["RECOVERY"] = recoveryToken;
+
+    std::string result;
+    ArduinoJson::serializeJson(new_json, result);
+    return result;
+}
+
+void AuthMethods::passwordRecovery(const std::string tokenUsername, const std::string username, const std::string password)
+{
+    User user;
+    user.username = username;
+    user.password = password;
+
+    if((tokenUsername != username) || !mongo.identification(user.username))
+    {
+        throw Poco::InvalidArgumentException("Неверный логин");
+    }
+
+    user.hashPassword = Algo::sha256(user.password);
+    mongo.checkVerification(user.username);
+
+    UpdateData data;
+    data.username = username;
+    data.field = MongoData::hashPassword;
+    data.newData = user.hashPassword;
+
+    mongo.adminUpdateData(data);
 }

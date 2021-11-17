@@ -8,15 +8,9 @@
 #include "jwt/jwt.hpp"
 #include "Poco/Net/NetException.h"
 
-#include "Poco/MongoDB/MongoDB.h"
-#include "Poco/MongoDB/Connection.h"
-#include "Poco/MongoDB/Database.h"
-#include "Poco/MongoDB/Cursor.h"
-#include "Poco/MongoDB/Array.h"
-
-#include <Poco/Redis/Client.h>
-#include <Poco/Redis/Array.h>
-#include <Poco/Redis/Command.h>
+#include <algorithm>
+#include <vector>
+#include <map>
 
 #include "database/mongodb/include/user.hpp"
 #include "database/mongodb/include/mongodata.hpp"
@@ -24,17 +18,34 @@
 
 namespace Auth
 {
-    std::string create_access_token(const User &user);
+    std::string createAccessToken(const User& user);
 
-    std::string create_access_token(const std::string &refreshToken);
+    std::string createAccessToken(const std::string& refreshToken);
 
-    std::string create_refresh_token(const User &user);
+    std::string createRefreshToken(const User& user);
 
-    bool check_refresh_token(const std::string &access_token);
+    std::string createRecoveryToken(const User& user);
 
-    bool check_access_token(const std::string &access_token);
+    std::string createSignUpToken(const User& user);
 
-    std::string sha256(const User &user);
+    bool checkRefreshToken(const std::string& accessToken);
 
-    std::string random_string(std::string::size_type lenght);
-}
+    bool checkAccessToken(const std::string& accessToken, const std::string& status);
+
+    std::string checkRecoveryToken(const std::string& recoveryToken);
+
+    std::string checkSignUpToken(const std::string& signUpToken);
+
+} // Auth
+
+namespace Algo
+{
+    int minDistance(std::string word1, std::string word2);
+
+    std::vector<User> searchResult(const std::vector<User> users, const std::string search);
+
+    std::string sha256(const std::string& password);
+
+    std::string randomString(std::string::size_type lenght);
+
+} // Algo

@@ -1,3 +1,3 @@
-#include "../modules/server-run/include/server.hpp"
+#include "../modules/server/include/server.hpp"
 
 POCO_SERVER_MAIN(WebServerApp)

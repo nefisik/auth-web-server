@@ -1,0 +1,14 @@
+#pragma once
+
+enum AdminCommands
+{
+    UPDATE_DATA,
+    GET_ALL_USERS,
+    GET_ALL_UNVERIFIED_USERS,
+    GET_ALL_UNVERIFIED_MAIL_USERS,
+    GET_ALL_ADMINS,
+    SEARCH_USER,
+    ADD_USER,
+    ADD_ADMIN,
+    DELETE_USER
+};

@@ -1,18 +1,35 @@
 #pragma once
 
-#include <string>
-#include "database/mongodb/include/user.hpp"
-#include "handlers/include/Base/BaseHandler.hpp"
+#include "server/include/Base/libs/ArduinoJson.hpp"
+#include "server/include/Base/static/AuthStatic.hpp"
+#include "database/algorithms/include/algorithms.hpp"
+#include "database/redis/include/redis.hpp"
+#include "database/mongodb/include/mongo.hpp"
+#include "database/mail/include/mail.hpp"
+#include "server/include/Base/BaseJson.hpp"
 
-class AuthMethods
+class AuthMethods : public BaseJson
 {
+private:
+    Mongo mongo;
+    Redis redis;
 public:
+    AuthMethods();
+    ~AuthMethods();
 
-    void SIGN_UP(User user);
+    void signUp(const std::string username, const std::string password, const std::string mail);
 
-    std::pair<std::string, std::string> SIGN_IN(User user);
+    void signUpVerify(const std::string signUpToken);
 
-    void SIGN_OUT(std::string refreshToken);
+    std::string signIn(const std::string username, const std::string password);
 
-    std::string REFRESH(std::string refreshToken);
+    std::string refresh(const std::string refreshToken);
+
+    void signOut(const std::string refreshToken);
+
+    void mailPasswordRecovery(const std::string mail);
+
+    std::string checkRecoveryToken(const std::string recoveryToken);
+
+    void passwordRecovery(const std::string tokenUsername, const std::string username, const std::string password);
 };

@@ -1,0 +1,13 @@
+#pragma once
+
+enum AuthCommands
+{
+    SIGN_UP,
+    SIGN_IN,
+    SIGN_OUT,
+    REFRESH,
+    MAIL_PASSWORD_RECOVERY,
+    CHECK_RECOVERY_TOKEN,
+    PASSWORD_RECOVERY,
+    SIGN_UP_VERIFY_URL
+};

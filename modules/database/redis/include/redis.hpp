@@ -2,22 +2,27 @@
 
 #include <Poco/Redis/Client.h>
 #include <Poco/Redis/Array.h>
+
+#include <Poco/Redis/Client.h>
 #include <Poco/Redis/Command.h>
 
 #include "configsdb.hpp"
-#include "configsJWT.hpp"
+#include "redisdata.hpp"
 
 #include <Poco/Net/NetException.h>
 
-namespace Redis
+class Redis
 {
-    void sendAuth(Poco::Redis::Client& client, const std::string& pwd);
-    
-    void set(Poco::Redis::Client& redis, std::string& refreshToken, std::string& accessToken);
+private:
+    Poco::Redis::Client redis;
 
-    void expire(Poco::Redis::Client& redis, std::string& refreshToken, const int& time);
+public:
+    Redis();
 
-    void del(Poco::Redis::Client& redis, std::string& refreshToken);
+    void sendAuth(const std::string& pwd);
+    void set(const std::string& refreshToken, const std::string& accessToken);
+    void expire(const std::string& refreshToken, const int& time);
+    void del(const std::string& refreshToken);
+    std::string get(const std::string& refreshToken);
 
-    std::string get(Poco::Redis::Client& redis, std::string& refreshToken);
-} // Redis
+};
