@@ -10,13 +10,15 @@
 
 class AdminMethods : public BaseJson
 {
+    using ArduinoJSON = ArduinoJson::StaticJsonDocument<1024 * 1024 * 1024>;
+
 private:
     Mongo mongo;
 public:
     AdminMethods();
     ~AdminMethods();
 
-    void updateData(const std::string username, const std::string field, const std::string newData);
+    void updateData(const std::string& adminUsername, const std::string& username, const std::string& field, const std::string& newData);
 
     std::string getAllUsers();
 
@@ -26,14 +28,14 @@ public:
 
     std::string getAllAdmins();
 
-    std::string searchUser(const std::string username);
+    std::string searchUser(const std::string& username);
 
-    void addUser(const std::string username, const std::string password, const std::string mail);
+    void addUser(const std::string& username, const std::string& password, const std::string& mail);
 
-    void addAdmin(const std::string username, const std::string password, const std::string mail);
+    void addAdmin(const std::string& username, const std::string& password, const std::string& mail);
 
-    void deleteUser(const std::string username);
+    void deleteUser(const std::string& username);
 
 private:
-    std::string users_to_json(ArduinoJson::StaticJsonDocument<1024 * 1024 * 1024>& new_json, const std::vector<User>& users);
+    std::string users_to_json(ArduinoJSON& new_json, const std::vector<User>& users);
 };

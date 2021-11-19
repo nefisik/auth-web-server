@@ -5,7 +5,7 @@ AdminHandler::AdminHandler(const AdminCommands& command)
 
 AdminHandler::~AdminHandler() = default;
 
-void AdminHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response)
+void AdminHandler::handleRequest(Request& request, Response& response)
 {
     response.set("Access-Control-Allow-Origin", CORS);
     response.set("Access-Control-Allow-Method", "GET, POST");
@@ -14,19 +14,18 @@ void AdminHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Ne
     {
         authorizationAdmin(request, response);
 
-        if ((request.getMethod() == Poco::Net::HTTPRequest::HTTP_GET) ||
-            (request.getMethod() == Poco::Net::HTTPRequest::HTTP_POST))
+        if ((request.getMethod() == HttpRequest::HTTP_GET) ||
+            (request.getMethod() == HttpRequest::HTTP_POST))
         {
-            std::unique_ptr<AdminMethods> method(new AdminMethods());
-            std::string resp_string;
-
+            std::string respString;
             auto json = getJson(request);
 
             switch (command)
             {
                 case AdminCommands::UPDATE_DATA:
                 {
-                    method->updateData(
+                    method.updateData(
+                        getUsernameFromToken(request),
                         getField(json, FrontData::username),
                         getField(json, FrontData::field),
                         getField(json, FrontData::newData));
@@ -35,34 +34,34 @@ void AdminHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Ne
                 }
                 case AdminCommands::GET_ALL_USERS:
                 {
-                    resp_string = method->getAllUsers();
+                    respString = method.getAllUsers();
                     break;
                 }
                 case AdminCommands::GET_ALL_UNVERIFIED_USERS:
                 {
-                    resp_string = method->getAllUnverifiedUsers();
+                    respString = method.getAllUnverifiedUsers();
                     break;
                 }
                 case AdminCommands::GET_ALL_UNVERIFIED_MAIL_USERS:
                 {
-                    resp_string = method->getAllUnverifiedMailUsers();
+                    respString = method.getAllUnverifiedMailUsers();
                     break;
                 }
                 case AdminCommands::GET_ALL_ADMINS:
                 {
-                    resp_string = method->getAllAdmins();
+                    respString = method.getAllAdmins();
                     break;
                 }
                 case AdminCommands::SEARCH_USER:
                 {
-                    resp_string = method->searchUser(
+                    respString = method.searchUser(
                         getField(json, FrontData::username));
 
                     break;
                 }
                 case AdminCommands::ADD_USER:
                 {
-                    method->addUser(
+                    method.addUser(
                         getField(json, FrontData::username),
                         getField(json, FrontData::password),
                         getField(json, FrontData::mail));
@@ -71,7 +70,7 @@ void AdminHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Ne
                 }
                 case AdminCommands::ADD_ADMIN:
                 {
-                    method->addAdmin(
+                    method.addAdmin(
                         getField(json, FrontData::username),
                         getField(json, FrontData::password),
                         getField(json, FrontData::mail));
@@ -80,7 +79,7 @@ void AdminHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Ne
                 }
                 case AdminCommands::DELETE_USER:
                 {
-                    method->deleteUser(
+                    method.deleteUser(
                         getField(json, FrontData::username));
 
                     break;
@@ -90,120 +89,19 @@ void AdminHandler::handleRequest(Poco::Net::HTTPServerRequest &request, Poco::Ne
                     break;
             }
 
-            if(!resp_string.empty())
-            {
-                response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
-                Poco::Net::MediaType type("application/json");
-                response.setContentType(type);
-                std::ostream& out = response.send();
-                out << resp_string;
-            }
-            else
-            {
-                response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_NO_CONTENT);
-                response.send();
-            }
-
-            printLogs(request, response);
-        }
-        else if (request.getMethod() == Poco::Net::HTTPRequest::HTTP_OPTIONS)
-        {
-            response.setStatus(Poco::Net::HTTPResponse::HTTPStatus::HTTP_OK);
-            response.set("Access-Control-Allow-Headers", "token, Content-Type Accept");
-            response.set("Access-Control-Request-Headers", "token, Content-Type Accept");
-            response.send();
-
-            printLogs(request, response);
+            sendResponse(request, response, respString);
         }
         else
         {
-            throw Poco::Net::HTTPException("HTTP_METHOD_NOT_ALLOWED");
+            throw Poco::Exception("HTTP_METHOD_NOT_ALLOWED", 405);
         }
     }
-    catch (const Poco::InvalidArgumentException &ex)
+    catch (const Poco::Exception& ex)
     {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_NOT_FOUND;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::Net::NotAuthenticatedException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_UNAUTHORIZED;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::InvalidAccessException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_FORBIDDEN;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::NotFoundException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_NOT_FOUND;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::ApplicationException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::Net::ConnectionRefusedException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_BAD_GATEWAY;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::Redis::RedisException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
-        sendResponse(request, response, status, ex.message());
-    }
-    catch (const Poco::Net::HTTPException &ex)
-    {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_METHOD_NOT_ALLOWED;
-        sendResponse(request, response, status, ex.message());
+        sendError(request, response, ex.code(), ex.message());
     }
     catch (...)
     {
-        const int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
-        sendResponse(request, response, status, "HTTP_INTERNAL_SERVER_ERROR");
+        sendError(request, response, 500, boost::current_exception_diagnostic_information());
     }
-}
-
-boost::property_tree::ptree AdminHandler::getJson(Poco::Net::HTTPServerRequest& request)
-{
-    boost::property_tree::ptree json;
-    std::string data;
-    auto& stream = request.stream();
-    getline(stream, data);
-    std::stringstream ss;
-    ss << data;
-    if (!data.empty())
-    {
-        boost::property_tree::read_json(ss, json);
-    }
-
-    return json;
-}
-
-std::string AdminHandler::getField(boost::property_tree::ptree& json, const std::string& field)
-{
-    std::string data;
-
-    for (const auto &it : json)
-    {
-        if (it.first == field)
-        {
-            data = it.second.get_value<std::string>();
-
-            if (data.empty())
-            {
-                throw Poco::InvalidArgumentException("Поле '" + field + "' не заполнено");
-            }
-        }
-    }
-
-    if (data.empty())
-    {
-        throw Poco::InvalidArgumentException("'" + field + "' field is missing");
-    }
-
-    return data;
 }

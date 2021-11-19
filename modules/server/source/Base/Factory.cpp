@@ -1,6 +1,6 @@
-#include "server/include/Base/RequestHandlerFactory.hpp"
+#include "server/include/Base/Factory.hpp"
 
-bool RequestHandlerFactory::methodURI(const std::string &valid_uri, const std::string &now_uri)
+bool Factory::methodURI(const std::string& valid_uri, const std::string& now_uri)
 {
     if (valid_uri.size() != now_uri.size())
 	{
@@ -19,13 +19,15 @@ bool RequestHandlerFactory::methodURI(const std::string &valid_uri, const std::s
     return key;
 }
 
-Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const Poco::Net::HTTPServerRequest &request)
+Poco::Net::HTTPRequestHandler* Factory::createRequestHandler(const Request& request)
 {
 	const Poco::URI uri(request.getURI());
 
 	try
 	{
-/********************************************AUTH_MESTHODS***********************************************/
+
+/********************************************AUTH_METHODS************************************************/
+
         if (methodURI(AuthSignUpURL, request.getURI().substr(0, AuthSignUpURL.size())))
             return new AuthHandler(AuthCommands::SIGN_UP);
 
@@ -51,6 +53,7 @@ Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const
             return new AuthHandler(AuthCommands::PASSWORD_RECOVERY);
 
 /*********************************************ADMIN_PANEL************************************************/
+
         else if (methodURI(UpdateDataURL, request.getURI().substr(0, UpdateDataURL.size())))
             return new AdminHandler(AdminCommands::UPDATE_DATA);
 
@@ -78,16 +81,13 @@ Poco::Net::HTTPRequestHandler *RequestHandlerFactory::createRequestHandler(const
         else if (methodURI(DeleteUserURL, request.getURI().substr(0, DeleteUserURL.size())))
             return new AdminHandler(AdminCommands::DELETE_USER);
 
-        // else
-            // return new ErrorRequestHandler(404);
+        else
+            return new ErrorHandler(Status::HTTP_NOT_FOUND);
 
     }
 	catch (...)
 	{
-		// return new ErrorRequestHandler(500);
-		// int status = Poco::Net::HTTPResponse::HTTPStatus::HTTP_INTERNAL_SERVER_ERROR;
-		// std::string msg = "Internal server error";
-        // sendResponse(request, response, status, msg);
+		return new ErrorHandler(Status::HTTP_INTERNAL_SERVER_ERROR);
 	}
 
 	return nullptr;

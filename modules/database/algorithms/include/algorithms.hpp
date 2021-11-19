@@ -32,6 +32,8 @@ namespace Auth
 
     bool checkAccessToken(const std::string& accessToken, const std::string& status);
 
+    std::string getUsernameAccess(const std::string& accessToken);
+
     std::string checkRecoveryToken(const std::string& recoveryToken);
 
     std::string checkSignUpToken(const std::string& signUpToken);
@@ -42,7 +44,7 @@ namespace Algo
 {
     int minDistance(std::string word1, std::string word2);
 
-    std::vector<User> searchResult(const std::vector<User> users, const std::string search);
+    std::vector<User> searchResult(const std::vector<User>& users, const std::string& search);
 
     std::string sha256(const std::string& password);
 

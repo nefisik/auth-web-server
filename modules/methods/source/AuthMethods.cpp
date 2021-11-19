@@ -1,6 +1,7 @@
 #include "methods/include/AuthMethods.hpp"
 
 AuthMethods::AuthMethods() = default;
+
 AuthMethods::~AuthMethods() = default;
 
 void AuthMethods::signUp(const std::string username, const std::string password, const std::string mail)
@@ -12,7 +13,7 @@ void AuthMethods::signUp(const std::string username, const std::string password,
 
     if(mongo.identification(user.username))
     {
-        throw Poco::InvalidArgumentException("Пользователь с данным логином уже существует");
+        throw Poco::Exception("Пользователь с данным логином уже существует", 400);
     }
 
     mongo.checkMail(mail, username);
@@ -43,7 +44,7 @@ std::string AuthMethods::signIn(const std::string username, const std::string pa
 
     if(!mongo.identification(user.username))
     {
-        throw Poco::InvalidArgumentException("Неверный логин");
+        throw Poco::Exception("Неверный логин", 400);
     }
 
     user.hashPassword = Algo::sha256(user.password);
@@ -58,9 +59,6 @@ std::string AuthMethods::signIn(const std::string username, const std::string pa
     redis.set(user.refreshToken, user.accessToken);
     redis.expire(user.refreshToken, JWTparams::refreshTokenLifetimeSeconds);
 
-    new_json["RESPONSE"]["STATUS"] = "200";
-    new_json["RESPONSE"]["COMMENT"] = "OK";
-    new_json["RESPONSE"]["MESSAGE"] = "Sign in success";
     new_json["RESPONSE"]["STATUS"] = user.status;
     new_json["RESPONSE"]["REFRESH"] = user.refreshToken;
     new_json["RESPONSE"]["ACCESS"] = user.accessToken;
@@ -74,7 +72,7 @@ std::string AuthMethods::refresh(const std::string refreshToken)
 {
     if (!Auth::checkRefreshToken(refreshToken))
     {
-        throw Poco::Net::NotAuthenticatedException("Unauthorized");
+        throw Poco::Exception("Unauthorized", 401);
     }
 
     auto accessToken = redis.get(refreshToken);
@@ -90,9 +88,6 @@ std::string AuthMethods::refresh(const std::string refreshToken)
         redis.del(refreshToken);
     }
 
-    new_json["RESPONSE"]["STATUS"] = "200";
-    new_json["RESPONSE"]["COMMENT"] = "OK";
-    new_json["RESPONSE"]["MESSAGE"] = "Refresh token success";
     new_json["RESPONSE"]["ACCESS"] = accessToken;
 
     std::string result;
@@ -125,9 +120,6 @@ std::string AuthMethods::checkRecoveryToken(const std::string recoveryToken)
 {
     std::string username = Auth::checkRecoveryToken(recoveryToken);
 
-    new_json["RESPONSE"]["STATUS"] = "200";
-    new_json["RESPONSE"]["COMMENT"] = "OK";
-    new_json["RESPONSE"]["MESSAGE"] = "Check recovery password success";
     new_json["RESPONSE"]["DATA"]["USERNAME"] = username;
     new_json["RESPONSE"]["DATA"]["RECOVERY"] = recoveryToken;
 
@@ -144,7 +136,7 @@ void AuthMethods::passwordRecovery(const std::string tokenUsername, const std::s
 
     if((tokenUsername != username) || !mongo.identification(user.username))
     {
-        throw Poco::InvalidArgumentException("Неверный логин");
+        throw Poco::Exception("Неверный логин", 400);
     }
 
     user.hashPassword = Algo::sha256(user.password);

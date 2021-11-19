@@ -9,13 +9,10 @@ class BaseJson
 {
 protected:
     ArduinoJson::StaticJsonDocument<1024 * 1024 * 1024> new_json;
-    int _status;
+    int status;
 public:
-    BaseJson(int status = 200);
-
+    BaseJson();
     ~BaseJson();
-
+private:
     void DateGenerator();
-
-    void setStatus(int status);
 };

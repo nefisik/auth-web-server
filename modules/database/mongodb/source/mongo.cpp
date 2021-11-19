@@ -11,7 +11,7 @@ void Mongo::sendAuth(const std::string& dbPassword)
     Poco::MongoDB::Database db(MongoConfig::DbAuthName);
     if(!db.authenticate(connection, MongoConfig::user, dbPassword))
 	{
-		throw Poco::Net::ConnectionRefusedException("MongoDB authentication failed");
+		throw Poco::Exception("MongoDB authentication failed", 502);
 	}
 }
 
@@ -32,7 +32,7 @@ void Mongo::addUser(const User& user)
 	std::string lastError = db.getLastError(connection);
 	if (!lastError.empty())
 	{
-		throw Poco::ApplicationException(db.getLastError(connection));
+		throw Poco::Exception(db.getLastError(connection), 500);
 	}
 }
 
@@ -89,7 +89,7 @@ void Mongo::checkMail(const std::string& mail, const std::string& username)
 	}
 	if(numMail >= 1)
 	{
-		throw Poco::InvalidArgumentException("Пользователь с данной почтой уже существует");
+		throw Poco::Exception("Пользователь с данной почтой уже существует", 400);
 	}
 }
 
@@ -113,12 +113,12 @@ void Mongo::checkVerification(const std::string& username)
 	}
 	if (verif.empty())
 	{
-		throw Poco::ApplicationException("Failed get user verification");
+		throw Poco::Exception("Failed check user verification", 500);
 	}
 
 	if(verif != MongoData::params::VERIFICATION_TRUE)
 	{
-		throw Poco::InvalidArgumentException("Вы неверифицированный пользователь.<br/>Дождитесь верификации администратором");
+		throw Poco::Exception("Вы неверифицированный пользователь.<br/>Дождитесь верификации администратором", 400);
 	}
 }
 
@@ -144,12 +144,12 @@ void Mongo::checkMailVerification(const std::string& username)
 	}
 	if (mailVerif.empty())
 	{
-		throw Poco::ApplicationException("Failed get user mail verification");
+		throw Poco::Exception("Failed get user mail verification", 500);
 	}
 
 	if(mailVerif != MongoData::params::MAIL_VERIFICATION_TRUE)
 	{
-		throw Poco::InvalidAccessException("Вы не подтвердили почту.<br/>Перейдите по ссылке, отправленной на почту " + mail);
+		throw Poco::Exception("Вы не подтвердили почту.<br/>Перейдите по ссылке, отправленной на почту " + mail, 403);
 	}
 }
 
@@ -173,12 +173,12 @@ void Mongo::checkHashPassword(const std::string& username, const std::string& ha
 	}
 	if (db_hashPassword.empty())
 	{
-		throw Poco::ApplicationException("Failed get user hash password");
+		throw Poco::Exception("Failed get user hash password", 500);
 	}
 
 	if(db_hashPassword != hashPassword)
 	{
-		throw Poco::InvalidArgumentException("Неверный пароль");
+		throw Poco::Exception("Неверный пароль", 400);
 	}
 }
 
@@ -203,7 +203,7 @@ std::string Mongo::getStatus(const std::string& username)
 	}
 	if (status.empty())
 	{
-		throw Poco::ApplicationException("Failed get user status");
+		throw Poco::Exception("Failed get user status", 500);
 	}
 
 	return status;
@@ -230,7 +230,7 @@ std::string Mongo::getUsername(const std::string& mail)
 	}
 	if (username.empty())
 	{
-		throw Poco::InvalidArgumentException("Неверная почта");
+		throw Poco::Exception("Неверная почта", 400);
 	}
 
 	return username;
@@ -246,7 +246,7 @@ void Mongo::verifyMail(const std::string& username)
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
 	if (lastError->isType<std::string>("err"))
 	{
-		throw Poco::ApplicationException(lastError->toString(2));
+		throw Poco::Exception(lastError->toString(2), 500);
 	}
 }
 
@@ -263,7 +263,7 @@ void Mongo::adminUpdateData(const UpdateData& data)
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
 	if (lastError->isType<std::string>("err"))
 	{
-		throw Poco::ApplicationException(lastError->toString(2));
+		throw Poco::Exception(lastError->toString(2), 500);
 	}
 }
 
@@ -415,7 +415,7 @@ void Mongo::adminAddUser(const User& user)
 	std::string lastError = db.getLastError(connection);
 	if (!lastError.empty())
 	{
-		throw Poco::ApplicationException(db.getLastError(connection));
+		throw Poco::Exception(db.getLastError(connection), 500);
 	}
 }
 
@@ -436,7 +436,7 @@ void Mongo::adminAddAdmin(const User& user)
 	std::string lastError = db.getLastError(connection);
 	if (!lastError.empty())
 	{
-		throw Poco::ApplicationException(db.getLastError(connection));
+		throw Poco::Exception(db.getLastError(connection), 500);
 	}
 }
 
@@ -450,6 +450,6 @@ void Mongo::adminDeleteUser(const std::string& username)
 	Poco::MongoDB::Document::Ptr lastError = db.getLastErrorDoc(connection);
 	if (lastError->isType<std::string>("err"))
 	{
-		throw Poco::ApplicationException(lastError->toString(2));
+		throw Poco::Exception(lastError->toString(2), 500);
 	}
 }

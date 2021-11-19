@@ -18,28 +18,36 @@
 #include "database/mongodb/include/mongodata.hpp"
 #include "database/mongodb/include/configsdb.hpp"
 
-#include "server/include/Base/libs/ArduinoJson.hpp"
+#include <boost/exception/diagnostic_information.hpp> 
 
 class BaseHandler : public Poco::Net::HTTPRequestHandler
 {
+	using Request = Poco::Net::HTTPServerRequest;
+	using Response = Poco::Net::HTTPServerResponse;
+    using Status = Poco::Net::HTTPResponse::HTTPStatus;
+    using HttpRequest = Poco::Net::HTTPRequest;
+    using BoostJSON = boost::property_tree::ptree;
+
 protected:
 	//_______AUTHORIZATION_______
 
-	void authorizationUser(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
+	void authorizationUser(Request& request, Response& response) const;
 
-	void authorizationAdmin(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
+	void authorizationAdmin(Request& request, Response& response) const;
 
     //_______RESPONSE_SEND_______
 
-	void printLogs(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
+	void printLogs(Request& request, Response& response) const;
 
-	void sendResponse(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg) const;
+	void sendError(Request& request, Response& response, const int& status, const std::string& msg) const;
 
-	void sendResponseData(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &data) const;
+    void sendResponse(Request& request, Response& response, const std::string& respString);
 
-	void sendResponseTokens(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string &refresh, const std::string& access) const;
+	//________GET_DATA___________
 
-	void sendResponseAccess(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response, const int &status, const std::string &msg, const std::string& access) const;
-
-	void setOptions(Poco::Net::HTTPServerRequest &request, Poco::Net::HTTPServerResponse &response) const;
+    BoostJSON getJson(Request& request);
+    std::string getHeader(Request& request, const std::string& header);
+    std::string getField(const BoostJSON& json, const std::string& field);
+    std::string getUrlData(const std::string& now_url, const std::string& valid_url);
+    std::string getUsernameFromToken(Request& request);
 };

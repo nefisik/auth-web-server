@@ -1,6 +1,6 @@
 #include "server/include/Base/BaseJson.hpp"
 
-BaseJson::BaseJson(int status)
+BaseJson::BaseJson()
 {
     DateGenerator();
     new_json["CONTENT-TYPE"] = "application/json";

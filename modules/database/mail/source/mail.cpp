@@ -52,8 +52,8 @@ void Mail::sendMail() const
         secure.sendMessage(message);
         secure.close();
     }
-    catch(...)
+    catch (...)
     {
-        throw Poco::InvalidArgumentException("Указана недействительная почта");
+        throw Poco::Exception("Указана недействительная почта", 400);
     }
 }

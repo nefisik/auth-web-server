@@ -15,8 +15,8 @@ namespace GMailConfig
 
 namespace HostLink
 {
-    const std::string host = Preloader::getConfigValue("Host");
-    const std::string port = Preloader::getConfigValue("Port");
+    const std::string host = Preloader::getConfigValue("FrontHost");
+    const std::string port = Preloader::getConfigValue("FrontPort");
 
 } // HostLink
 
